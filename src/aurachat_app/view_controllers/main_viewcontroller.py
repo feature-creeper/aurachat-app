@@ -1,6 +1,8 @@
 import sys
 import os
 import tkinter as tk
+import threading
+import time
 
 
 # Add the parent directory to the Python path so we can import from views
@@ -95,6 +97,7 @@ class MainViewController:
     
     def init_message_watcher(self):
         """Initialize the MongoDB messages watcher."""
+        # Initialize watcher - no polling, only change stream
         self.message_watcher = MessagesWatcher()
         self.message_watcher.register_callback(self.handle_message_update)
         
@@ -102,7 +105,20 @@ class MainViewController:
         self.message_watcher.add_chat_id_to_watch(CONFIG_CHAT_ID)
         
         self.message_watcher.start()
-        self.update_status(f"Message watcher started for chat ID: {CONFIG_CHAT_ID}")
+        self.update_status(f"Watching for changes to chat ID: {CONFIG_CHAT_ID}")
+        
+        # Do a single initial check to get current data
+        self.manual_refresh()
+    
+    def manual_refresh(self):
+        """Manually check for the current state of the watched chat ID."""
+        if hasattr(self, 'message_watcher'):
+            self.update_status(f"Manually checking chat ID: {CONFIG_CHAT_ID}...")
+            result = self.message_watcher.manual_check(CONFIG_CHAT_ID)
+            if result:
+                self.update_status(f"Manual check completed - found messages")
+            else:
+                self.update_status(f"Manual check completed - no new messages")
     
     def watch_chat_id(self, chat_id):
         """Add a chat_id to the watch list."""
@@ -151,6 +167,8 @@ class MainViewController:
         messages = updated_document.get('messages', [])
         message_count = len(messages)
         
+        print(f"Received update for chat_id: {chat_id}, message count: {message_count}")
+        
         # Process the latest client message
         self.process_client_message(chat_id)
         
@@ -169,4 +187,6 @@ class MainViewController:
         """Clean up resources before application exit."""
         if hasattr(self, 'message_watcher'):
             self.message_watcher.stop()
+        
+        # Remove polling thread cleanup since it's no longer used
 
