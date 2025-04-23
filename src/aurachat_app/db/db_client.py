@@ -1,4 +1,5 @@
 import os
+import certifi
 from typing import Dict, Any, Optional
 from pymongo import MongoClient
 from dotenv import load_dotenv
@@ -10,11 +11,19 @@ load_dotenv()
 MONGODB_URI = os.getenv("MONGODB_URI")
 
 def get_mongodb_client() -> MongoClient:
-    """Returns a MongoDB client instance."""
+    """Returns a MongoDB client instance with SSL certificate verification configured."""
     if not MONGODB_URI:
         raise ValueError("MONGODB_URI environment variable not set")
     
-    return MongoClient(MONGODB_URI)
+    # Use certifi to provide a trusted CA bundle
+    # This solves the SSL certificate verification issue
+    return MongoClient(
+        MONGODB_URI,
+        tlsCAFile=certifi.where(),
+        # Add connect timeout to avoid hanging forever
+        connectTimeoutMS=30000,
+        socketTimeoutMS=30000
+    )
 
 def get_latest_client_message(chat_id: int) -> Optional[Dict[str, Any]]:
     

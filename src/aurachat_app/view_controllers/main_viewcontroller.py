@@ -1,5 +1,6 @@
 import sys
 import os
+import tkinter as tk
 
 
 # Add the parent directory to the Python path so we can import from views
@@ -7,6 +8,16 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from views.main_view import root, status_label, title_label, initialize_ui
 from db.db_watcher import MessagesWatcher
 from db.db_client import get_latest_client_message
+
+# Import the chat_id from config.py using absolute path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
+sys.path.insert(0, project_root)  # Ensure project root is first in path
+
+try:
+    from config import chat_id as CONFIG_CHAT_ID
+except ImportError:
+    print("Warning: Could not import config.py, using default chat_id")
+    CONFIG_CHAT_ID = 6172560874  # Default value from config.py
 
 class MainViewModel:
     """View model for the main view containing string properties for UI elements."""
@@ -54,6 +65,8 @@ class MainViewController:
         self.bind_ui()
         # Initialize the message watcher
         self.init_message_watcher()
+
+        self.process_client_message(CONFIG_CHAT_ID)
     
     def bind_ui(self):
         """Bind the view model to UI elements."""
@@ -65,24 +78,31 @@ class MainViewController:
             title_label.config(text=self.view_model.title_text)
     
     def update_status(self, status):
-        """Update the status text through the view model."""
+        """Update the status text through the view model and ensure UI is updated."""
         self.view_model.status_text = status
+        # Force UI update by manually updating the label and processing events
+        if status_label:
+            status_label.config(text=status)
+            # Process pending events to ensure the UI updates immediately
+            if self.root:
+                self.root.update_idletasks()
     
     def update_title(self, title):
         """Update the title text through the view model."""
         self.view_model.title_text = title
+        if title_label:
+            title_label.config(text=title)
     
     def init_message_watcher(self):
         """Initialize the MongoDB messages watcher."""
         self.message_watcher = MessagesWatcher()
         self.message_watcher.register_callback(self.handle_message_update)
         
-        # Add specific chat_ids to watch
-        # You can add more chat_ids or modify this to load them from a configuration
-        self.message_watcher.add_chat_id_to_watch(123456789)  # Example chat_id
+        # Add specific chat_ids to watch using the configured chat_id
+        self.message_watcher.add_chat_id_to_watch(CONFIG_CHAT_ID)
         
         self.message_watcher.start()
-        self.update_status("Message watcher started")
+        self.update_status(f"Message watcher started for chat ID: {CONFIG_CHAT_ID}")
     
     def watch_chat_id(self, chat_id):
         """Add a chat_id to the watch list."""
@@ -98,13 +118,8 @@ class MainViewController:
         else:
             self.update_status(f"Not watching chat ID: {chat_id}")
     
-    def handle_message_update(self, updated_document):
-        """Handle updates to messages in the database."""
-        chat_id = updated_document.get('chat_id')
-        messages = updated_document.get('messages', [])
-        message_count = len(messages)
-        
-        
+    def process_client_message(self, chat_id):
+        """Process the latest client message for a specific chat_id."""
         # Get the latest client message using the dedicated function
         latest_client_message = get_latest_client_message(chat_id)
         
@@ -113,11 +128,31 @@ class MainViewController:
             print(f"Latest client message: {latest_client_message}")
             
             # Example: Access specific fields from the latest client message
-            content = latest_client_message.get('content')
+            content = latest_client_message.get('text')
             created_at = latest_client_message.get('created_at')
             
             if content:
-                self.update_status(f"New client message: {content[:30]}..." if len(content) > 30 else content)
+                status_text = f"New client message: {content[:30]}..." if len(content) > 30 else f"New client message: {content}"
+                print(f"Updating status to: {status_text}")
+                self.update_title(status_text)
+                # Double-check that label was updated
+                if status_label:
+                    print(f"Current status label text: {status_label['text']}")
+            
+            return True
+        else:
+            print(f"No client message found for chat_id: {chat_id}")
+        
+        return False
+    
+    def handle_message_update(self, updated_document):
+        """Handle updates to messages in the database."""
+        chat_id = updated_document.get('chat_id')
+        messages = updated_document.get('messages', [])
+        message_count = len(messages)
+        
+        # Process the latest client message
+        self.process_client_message(chat_id)
         
         # Process all messages if needed
         if messages and message_count > 0:

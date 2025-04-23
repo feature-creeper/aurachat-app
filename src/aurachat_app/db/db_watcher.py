@@ -2,7 +2,8 @@ import time
 import threading
 from typing import Callable, Dict, Any, List, Optional, Set
 from pymongo.collection import Collection
-from pymongo.errors import PyMongoError
+from pymongo.errors import PyMongoError, OperationFailure
+from pymongo.cursor import CursorType
 from .db_client import get_mongodb_client
 
 class MessagesWatcher:
@@ -144,10 +145,18 @@ class MessagesWatcher:
             # Iterate over the change stream as long as the watcher is running
             while self._running:
                 try:
-                    # Check if there are any changes available (with timeout)
-                    if self._change_stream.alive and self._change_stream.has_next(max_await_time_ms=1000):
-                        change = self._change_stream.next()
-                        
+                    # Try to get the next change with a non-blocking approach
+                    # Use a timeout to avoid blocking indefinitely
+                    change = None
+                    try:
+                        # The next() call will block until a change is available or timeout occurs
+                        # We set a max time MS in the change stream creation
+                        change = next(self._change_stream, None)
+                    except StopIteration:
+                        # No changes available, just continue and wait
+                        change = None
+                    
+                    if change is not None:
                         if 'fullDocument' in change and change['fullDocument'] is not None:
                             # Notify all registered callbacks
                             updated_document = change['fullDocument']
