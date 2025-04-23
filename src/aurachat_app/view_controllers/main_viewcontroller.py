@@ -1,10 +1,12 @@
 import sys
 import os
 
+
 # Add the parent directory to the Python path so we can import from views
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from views.main_view import root, status_label, title_label, initialize_ui
 from db.db_watcher import MessagesWatcher
+from db.db_client import get_latest_client_message
 
 class MainViewModel:
     """View model for the main view containing string properties for UI elements."""
@@ -102,14 +104,26 @@ class MainViewController:
         messages = updated_document.get('messages', [])
         message_count = len(messages)
         
-        # Update the UI with information about the message update
-        self.update_status(f"Messages updated for chat {chat_id}, count: {message_count}")
         
-        # Process new messages here as needed
+        # Get the latest client message using the dedicated function
+        latest_client_message = get_latest_client_message(chat_id)
+        
+        if latest_client_message:
+            # Process the latest client message
+            print(f"Latest client message: {latest_client_message}")
+            
+            # Example: Access specific fields from the latest client message
+            content = latest_client_message.get('content')
+            created_at = latest_client_message.get('created_at')
+            
+            if content:
+                self.update_status(f"New client message: {content[:30]}..." if len(content) > 30 else content)
+        
+        # Process all messages if needed
         if messages and message_count > 0:
             latest_message = messages[-1]  # Get the most recent message
-            # Do something with the latest message
-            print(f"Latest message: {latest_message}")
+            # Do something with the latest message (any role)
+            print(f"Latest message (any role): {latest_message}")
     
     def run(self):
         """Start the main UI loop."""

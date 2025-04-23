@@ -16,17 +16,40 @@ def get_mongodb_client() -> MongoClient:
     
     return MongoClient(MONGODB_URI)
 
-def get_message_by_chat_id(chat_id: str) -> Optional[Dict[str, Any]]:
-    """Get a message from the telegram database messages collection by chat_id."""
+def get_latest_client_message(chat_id: int) -> Optional[Dict[str, Any]]:
+    
     try:
         client = get_mongodb_client()
         db = client["telegram"]
         messages_collection = db["messages"]
         
-        message = messages_collection.find_one({"chat_id": chat_id})
-        return message
+        # Get the document for the chat_id
+        document = messages_collection.find_one({"chat_id": chat_id})
+        
+        if not document or "messages" not in document:
+            return None
+        
+        # Filter for client messages only and sort by created_at in descending order
+        client_messages = [
+            msg for msg in document["messages"] 
+            if msg.get("role") == "client" and "created_at" in msg
+        ]
+        
+        if not client_messages:
+            return None
+            
+        # Sort by created_at in descending order (newest first)
+        sorted_messages = sorted(
+            client_messages,
+            key=lambda msg: msg["created_at"],
+            reverse=True
+        )
+        
+        # Return the most recent client message
+        return sorted_messages[0] if sorted_messages else None
+        
     except Exception as e:
-        print(f"Error retrieving message by chat_id: {e}")
+        print(f"Error retrieving client message by chat_id: {e}")
         return None
     finally:
         if 'client' in locals():
