@@ -167,21 +167,12 @@ class MainViewController:
         latest_client_message = get_latest_client_message(chat_id)
         
         if latest_client_message:
-            # Process the latest client message
-            print(f"Latest client message: {latest_client_message}")
-            
-            # Example: Access specific fields from the latest client message
             content = latest_client_message.get('text')
             created_at = latest_client_message.get('created_at')
             
             if content:
-                status_text = f"New client message: {content[:30]}..." if len(content) > 30 else f"New client message: {content}"
-                print(f"Updating status to: {status_text}")
+                status_text = f"New client message: {content[:30]}..." if len(content) > 30 else content
                 self.update_title(status_text)
-                
-                # Double-check that label was updated
-                if status_label:
-                    print(f"Current status label text: {status_label['text']}")
             
             return True
         else:
@@ -195,7 +186,6 @@ class MainViewController:
         messages = updated_document.get('messages', [])
         message_count = len(messages)
         
-        print(f"Received update for chat_id: {chat_id}, message count: {message_count}")
         
         # Check if there are messages
         if messages and message_count > 0:
@@ -206,22 +196,18 @@ class MainViewController:
             role = latest_message.get('role')
             
             if role == 'client':
-                # For client messages, process and clear model response
                 self.process_client_message(chat_id)
                 # Clear model response area
-                self.update_model_response("Model Response: Waiting for response...")
+                self.update_model_response("Waiting for response...")
                 
             elif role == 'model':
                 # For model messages, update the model response display
                 content = latest_message.get('text')
                 if content:
                     # Format and display the model's response
-                    formatted_response = f"Model: {content}"
+                    formatted_response = content
                     self.update_model_response(formatted_response)
-            else:
-                # For any other role or if role is not specified
-                print(f"Message with unknown role: {role}")
-                self.update_status(f"Received message with role: {role}")
+
     
     def run(self):
         """Start the main UI loop."""
