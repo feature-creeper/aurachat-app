@@ -35,9 +35,36 @@ status_label = tk.Label(
 )
 status_label.pack(pady=5, padx=5, fill=tk.X)
 
-# Create a button
+# Create a model response section
+model_response_frame = tk.Frame(
+    root,
+    padx=5,
+    pady=5,
+    bg="#1e2129",  # Darker background for contrast
+    highlightbackground="#4a5568",  # Border color
+    highlightthickness=1  # Border thickness
+)
+model_response_frame.pack(fill=tk.BOTH, expand=True, pady=5, padx=10)
+
+# Create a model response label
+model_response_label = tk.Label(
+    model_response_frame,
+    text="Model Response: Waiting for input...",
+    font=("Arial", 11),
+    justify=tk.LEFT,
+    anchor="nw",
+    wraplength=360,  # Allow text wrapping
+    bg="#1e2129",  # Match frame background
+    fg="#ffffff"   # White text for better readability
+)
+model_response_label.pack(pady=5, padx=5, fill=tk.BOTH, expand=True)
+
+# Create a button (function will be set by the controller)
+button_handler = None
+
 def button_clicked():
-    pass
+    if button_handler:
+        button_handler()
 
 # Create button frame with border
 button_frame = tk.Frame(
@@ -49,7 +76,7 @@ button_frame.pack(pady=10, padx=10)
 
 action_button = tk.Button(
     button_frame,
-    text="START BOT",
+    text="COPY RESPONSE",
     font=("Arial", 14, "bold"),
     command=button_clicked
 )
@@ -60,6 +87,12 @@ def initialize_ui():
     """Initialize and show the UI without starting mainloop."""
     # All UI elements are already initialized above
     return root
+
+# Set the button handler
+def set_button_handler(handler_function):
+    """Set the handler function for the button."""
+    global button_handler
+    button_handler = handler_function
 
 # Only start mainloop if this file is run directly
 if __name__ == "__main__":

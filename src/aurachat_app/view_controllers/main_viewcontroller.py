@@ -7,7 +7,7 @@ import time
 
 # Add the parent directory to the Python path so we can import from views
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from views.main_view import root, status_label, title_label, initialize_ui
+from views.main_view import root, status_label, title_label, model_response_label, initialize_ui, set_button_handler
 from db.db_watcher import MessagesWatcher
 from db.db_client import get_latest_client_message
 
@@ -28,6 +28,7 @@ class MainViewModel:
         # Initialize default values
         self._status_text = "Status: Ready"
         self._title_text = "AuraChat Bot Interface"
+        self._model_response_text = "Model Response: Waiting for input..."
     
     @property
     def status_text(self):
@@ -52,6 +53,18 @@ class MainViewModel:
         self._title_text = value
         if title_label:
             title_label.config(text=value)
+    
+    @property
+    def model_response_text(self):
+        """Get the current model response text."""
+        return self._model_response_text
+    
+    @model_response_text.setter
+    def model_response_text(self, value):
+        """Set the model response text and update the UI."""
+        self._model_response_text = value
+        if model_response_label:
+            model_response_label.config(text=value)
 
 
 class MainViewController:
@@ -65,6 +78,8 @@ class MainViewController:
         self.view_model = MainViewModel()
         # Bind UI elements
         self.bind_ui()
+        # Set up button handler
+        set_button_handler(self.copy_response_to_clipboard)
         # Initialize the message watcher
         self.init_message_watcher()
 
@@ -78,6 +93,9 @@ class MainViewController:
         
         if title_label:
             title_label.config(text=self.view_model.title_text)
+            
+        if model_response_label:
+            model_response_label.config(text=self.view_model.model_response_text)
     
     def update_status(self, status):
         """Update the status text through the view model and ensure UI is updated."""
@@ -94,6 +112,15 @@ class MainViewController:
         self.view_model.title_text = title
         if title_label:
             title_label.config(text=title)
+    
+    def update_model_response(self, response):
+        """Update the model response text through the view model."""
+        self.view_model.model_response_text = response
+        # Force UI update
+        if model_response_label:
+            model_response_label.config(text=response)
+            if self.root:
+                self.root.update_idletasks()
     
     def init_message_watcher(self):
         """Initialize the MongoDB messages watcher."""
@@ -151,6 +178,7 @@ class MainViewController:
                 status_text = f"New client message: {content[:30]}..." if len(content) > 30 else f"New client message: {content}"
                 print(f"Updating status to: {status_text}")
                 self.update_title(status_text)
+                
                 # Double-check that label was updated
                 if status_label:
                     print(f"Current status label text: {status_label['text']}")
@@ -169,14 +197,31 @@ class MainViewController:
         
         print(f"Received update for chat_id: {chat_id}, message count: {message_count}")
         
-        # Process the latest client message
-        self.process_client_message(chat_id)
-        
-        # Process all messages if needed
+        # Check if there are messages
         if messages and message_count > 0:
-            latest_message = messages[-1]  # Get the most recent message
-            # Do something with the latest message (any role)
-            print(f"Latest message (any role): {latest_message}")
+            # Get the most recent message
+            latest_message = messages[-1]
+            
+            # Check the role of the latest message
+            role = latest_message.get('role')
+            
+            if role == 'client':
+                # For client messages, process and clear model response
+                self.process_client_message(chat_id)
+                # Clear model response area
+                self.update_model_response("Model Response: Waiting for response...")
+                
+            elif role == 'model':
+                # For model messages, update the model response display
+                content = latest_message.get('text')
+                if content:
+                    # Format and display the model's response
+                    formatted_response = f"Model: {content}"
+                    self.update_model_response(formatted_response)
+            else:
+                # For any other role or if role is not specified
+                print(f"Message with unknown role: {role}")
+                self.update_status(f"Received message with role: {role}")
     
     def run(self):
         """Start the main UI loop."""
@@ -189,4 +234,20 @@ class MainViewController:
             self.message_watcher.stop()
         
         # Remove polling thread cleanup since it's no longer used
+    
+    def copy_response_to_clipboard(self):
+        """Copy the current model response to the clipboard."""
+        if not model_response_label:
+            return
+            
+        # Get the text from the model response label
+        response_text = model_response_label.cget("text")
+        
+        # Copy to clipboard using tkinter clipboard
+        self.root.clipboard_clear()
+        self.root.clipboard_append(response_text)
+        self.root.update()  # Required to finalize clipboard operations
+        
+        # Update status to indicate successful copy
+        self.update_status("Response copied to clipboard!")
 
