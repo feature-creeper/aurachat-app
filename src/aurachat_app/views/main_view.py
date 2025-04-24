@@ -6,7 +6,7 @@ MODEL_VERTICAL_SPACING = 0  # Controls vertical spacing around the model respons
 
 # Create the root window
 root = tk.Tk()
-root.title("AuraChat Bot")
+root.title("AuraChat")
 root.geometry("450x350")  # Increased initial size
 root.minsize(400, 300)  # Set minimum size to ensure buttons are visible
 root.attributes('-topmost', True)  # Stay on top of other windows
