@@ -7,7 +7,7 @@ import time
 
 # Add the parent directory to the Python path so we can import from views
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from views.main_view import root, status_label, title_label, model_response_label, initialize_ui, set_button_handler
+from views.main_view import root, client_response_label, model_response_label, update_client_text, update_model_text, initialize_ui, set_button_handler, set_issue_button_handler, update_client_name
 from db.db_watcher import MessagesWatcher
 from db.db_client import get_latest_client_message
 
@@ -26,33 +26,20 @@ class MainViewModel:
     
     def __init__(self):
         # Initialize default values
-        self._status_text = "Status: Ready"
-        self._title_text = "AuraChat Bot Interface"
-        self._model_response_text = "Model Response: Waiting for input..."
+        self._client_message_text = "Waiting for client message..."
+        self._model_response_text = "Waiting for input..."
     
     @property
-    def status_text(self):
-        """Get the current status text."""
-        return self._status_text
+    def client_message_text(self):
+        """Get the current client message text."""
+        return self._client_message_text
     
-    @status_text.setter
-    def status_text(self, value):
-        """Set the status text and update the UI."""
-        self._status_text = value
-        if status_label:
-            status_label.config(text=value)
-    
-    @property
-    def title_text(self):
-        """Get the current title text."""
-        return self._title_text
-    
-    @title_text.setter
-    def title_text(self, value):
-        """Set the title text and update the UI."""
-        self._title_text = value
-        if title_label:
-            title_label.config(text=value)
+    @client_message_text.setter
+    def client_message_text(self, value):
+        """Set the client message text and update the UI."""
+        self._client_message_text = value
+        # Use the update_client_text function to update the Text widget
+        update_client_text(value)
     
     @property
     def model_response_text(self):
@@ -63,8 +50,8 @@ class MainViewModel:
     def model_response_text(self, value):
         """Set the model response text and update the UI."""
         self._model_response_text = value
-        if model_response_label:
-            model_response_label.config(text=value)
+        # Use the update_model_text function to update the Text widget
+        update_model_text(value)
 
 
 class MainViewController:
@@ -78,8 +65,9 @@ class MainViewController:
         self.view_model = MainViewModel()
         # Bind UI elements
         self.bind_ui()
-        # Set up button handler
+        # Set up button handlers
         set_button_handler(self.copy_response_to_clipboard)
+        set_issue_button_handler(self.report_issue)
         # Initialize the message watcher
         self.init_message_watcher()
 
@@ -88,39 +76,18 @@ class MainViewController:
     def bind_ui(self):
         """Bind the view model to UI elements."""
         # Set initial values
-        if status_label:
-            status_label.config(text=self.view_model.status_text)
-        
-        if title_label:
-            title_label.config(text=self.view_model.title_text)
-            
-        if model_response_label:
-            model_response_label.config(text=self.view_model.model_response_text)
+        update_client_text(self.view_model.client_message_text)
+        update_model_text(self.view_model.model_response_text)
     
-    def update_status(self, status):
-        """Update the status text through the view model and ensure UI is updated."""
-        self.view_model.status_text = status
-        # Force UI update by manually updating the label and processing events
-        if status_label:
-            status_label.config(text=status)
-            # Process pending events to ensure the UI updates immediately
-            if self.root:
-                self.root.update_idletasks()
-    
-    def update_title(self, title):
-        """Update the title text through the view model."""
-        self.view_model.title_text = title
-        if title_label:
-            title_label.config(text=title)
+    def update_client_message(self, message):
+        """Update the client message text through the view model."""
+        self.view_model.client_message_text = message
+        # Force UI update is handled by update_client_text
     
     def update_model_response(self, response):
         """Update the model response text through the view model."""
         self.view_model.model_response_text = response
-        # Force UI update
-        if model_response_label:
-            model_response_label.config(text=response)
-            if self.root:
-                self.root.update_idletasks()
+        # Force UI update is handled by update_model_text
     
     def init_message_watcher(self):
         """Initialize the MongoDB messages watcher."""
@@ -132,7 +99,7 @@ class MainViewController:
         self.message_watcher.add_chat_id_to_watch(CONFIG_CHAT_ID)
         
         self.message_watcher.start()
-        self.update_status(f"Watching for changes to chat ID: {CONFIG_CHAT_ID}")
+        print(f"Watching for changes to chat ID: {CONFIG_CHAT_ID}")
         
         # Do a single initial check to get current data
         self.manual_refresh()
@@ -140,26 +107,26 @@ class MainViewController:
     def manual_refresh(self):
         """Manually check for the current state of the watched chat ID."""
         if hasattr(self, 'message_watcher'):
-            self.update_status(f"Manually checking chat ID: {CONFIG_CHAT_ID}...")
+            print(f"Manually checking chat ID: {CONFIG_CHAT_ID}...")
             result = self.message_watcher.manual_check(CONFIG_CHAT_ID)
             if result:
-                self.update_status(f"Manual check completed - found messages")
+                print(f"Manual check completed - found messages")
             else:
-                self.update_status(f"Manual check completed - no new messages")
+                print(f"Manual check completed - no new messages")
     
     def watch_chat_id(self, chat_id):
         """Add a chat_id to the watch list."""
         if self.message_watcher.add_chat_id_to_watch(chat_id):
-            self.update_status(f"Now watching chat ID: {chat_id}")
+            print(f"Now watching chat ID: {chat_id}")
         else:
-            self.update_status(f"Already watching chat ID: {chat_id}")
+            print(f"Already watching chat ID: {chat_id}")
     
     def unwatch_chat_id(self, chat_id):
         """Remove a chat_id from the watch list."""
         if self.message_watcher.remove_chat_id_from_watch(chat_id):
-            self.update_status(f"Stopped watching chat ID: {chat_id}")
+            print(f"Stopped watching chat ID: {chat_id}")
         else:
-            self.update_status(f"Not watching chat ID: {chat_id}")
+            print(f"Not watching chat ID: {chat_id}")
     
     def process_client_message(self, chat_id):
         """Process the latest client message for a specific chat_id."""
@@ -171,14 +138,17 @@ class MainViewController:
             created_at = latest_client_message.get('created_at')
             
             if content:
-                status_text = f"New client message: {content[:30]}..." if len(content) > 30 else content
-                self.update_title(status_text)
+                # Update the client message display
+                client_message = content
+                self.update_client_message(client_message)
+                
+                # Log message
+                print(f"New message: {content[:30]}..." if len(content) > 30 else f"New message: {content}")
             
             return True
         else:
-            print(f"No client message found for chat_id: {chat_id}")
-        
-        return False
+            self.update_client_message("Waiting for client message...")
+            return False
     
     def handle_message_update(self, updated_document):
         """Handle updates to messages in the database."""
@@ -186,6 +156,12 @@ class MainViewController:
         messages = updated_document.get('messages', [])
         message_count = len(messages)
         
+        # Extract client name from client_profile if it exists
+        client_profile = updated_document.get('client_profile', {})
+        client_name = client_profile.get('name')
+        
+        # Update the client name label
+        update_client_name(client_name)
         
         # Check if there are messages
         if messages and message_count > 0:
@@ -223,17 +199,42 @@ class MainViewController:
     
     def copy_response_to_clipboard(self):
         """Copy the current model response to the clipboard."""
-        if not model_response_label:
-            return
-            
-        # Get the text from the model response label
-        response_text = model_response_label.cget("text")
+        # Get the text from the model response text widget
+        model_response_label.config(state=tk.NORMAL)
+        response_text = model_response_label.get("1.0", tk.END).strip()
+        model_response_label.config(state=tk.DISABLED)
         
         # Copy to clipboard using tkinter clipboard
         self.root.clipboard_clear()
         self.root.clipboard_append(response_text)
         self.root.update()  # Required to finalize clipboard operations
+
+
+    def report_issue(self):
+        """Handle the issue button click."""
+        print("Issue detected")
         
-        # Update status to indicate successful copy
-        self.update_status("Response copied to clipboard!")
+        # Get the current client and model messages
+        client_message = self.view_model.client_message_text
+        
+        # Get text directly from the model response widget
+        model_response_label.config(state=tk.NORMAL)
+        model_message = model_response_label.get("1.0", tk.END).strip()
+        model_response_label.config(state=tk.DISABLED)
+        
+        # Print detailed information that could be useful for troubleshooting
+        print(f"Issue report details:")
+        print(f"Chat ID: {CONFIG_CHAT_ID}")
+        print(f"Client message: {client_message}")
+        print(f"Model response: {model_message}")
+        
+        # Provide visual feedback
+        original_text = self.view_model.client_message_text
+        self.update_client_message("Issue reported!")
+        
+        # Reset client message after 1.5 seconds
+        def reset_message():
+            self.update_client_message(original_text)
+        
+        self.root.after(1500, reset_message)
 
