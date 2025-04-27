@@ -7,9 +7,10 @@ import time
 
 # Add the parent directory to the Python path so we can import from views
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from views.main_view import root, client_response_label, model_response_label, update_client_text, update_model_text, initialize_ui, set_button_handler, set_issue_button_handler, update_client_name
+from views.main_view import root, client_response_label, model_response_label, update_client_text, update_model_text, initialize_ui, set_button_handler, set_issue_button_handler, update_client_name, add_account_view, get_account_views, set_signin_handler, initialize_views
 from db.db_watcher import MessagesWatcher
-from db.db_client import get_latest_client_message
+from db.db_client import get_latest_client_message, fetch_connected_accounts, find_user_by_email, list_mongodb_info
+from model.user_state import user_signedin, set_user_signed_in, get_current_user_id, set_current_user_id
 
 # Import the chat_id from config.py using absolute path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -20,6 +21,9 @@ try:
 except ImportError:
     print("Warning: Could not import config.py, using default chat_id")
     CONFIG_CHAT_ID = 6172560874  # Default value from config.py
+
+# The user_id will be set dynamically upon sign-in
+# It should be None in config.py
 
 class MainViewModel:
     """View model for the main view containing string properties for UI elements."""
@@ -65,13 +69,35 @@ class MainViewController:
         self.view_model = MainViewModel()
         # Bind UI elements
         self.bind_ui()
-        # Set up button handlers
-        set_button_handler(self.copy_response_to_clipboard)
-        set_issue_button_handler(self.report_issue)
-        # Initialize the message watcher
-        self.init_message_watcher()
+        
+        # Initialize user ID as None (will be set on sign-in)
+        self.current_user_id = None
+        
+        # Set up sign-in handler (always do this regardless of sign-in state)
+        # Store this handler as a bound method that can be reused
+        self.signin_handler_method = self.handle_signin
+        set_signin_handler(self.signin_handler_method)
+        
+        # Check if user is signed in
+        if user_signedin():
+            # Only set up handlers and fetch data if signed in
+            set_button_handler(self.copy_response_to_clipboard)
+            set_issue_button_handler(self.report_issue)
+            # Initialize the message watcher
+            self.init_message_watcher()
 
-        self.process_client_message(CONFIG_CHAT_ID)
+            # Skip fetching accounts here - we don't have a user_id yet
+            # This will only run if the app is restarted while signed in,
+            # which isn't fully supported without persistent storage of the user_id
+            
+            print("User is signed in but no user ID is available. Please sign in again.")
+            # Force sign out to avoid inconsistent state
+            set_user_signed_in(False)
+            import views.main_view as main_view
+            main_view.initialize_views()
+        else:
+            # Not signed in - don't initialize message watcher or fetch accounts
+            print("User not signed in - showing sign-in view")
     
     def bind_ui(self):
         """Bind the view model to UI elements."""
@@ -237,4 +263,158 @@ class MainViewController:
             self.update_client_message(original_text)
         
         self.root.after(1500, reset_message)
+
+    def fetch_and_print_connected_accounts(self, user_identifier):
+        """
+        Fetch and print connected accounts for a specific user.
+        
+        Args:
+            user_identifier: Either a chat_id (int) or MongoDB _id (str)
+            
+        Returns:
+            int: Number of connected accounts found
+        """
+        accounts = fetch_connected_accounts(user_identifier)
+        account_count = 0
+        
+        if accounts:
+            account_count = len(accounts)
+            id_type = "ObjectId" if isinstance(user_identifier, str) else "chat_id"
+            print(f"Connected accounts for user ({id_type}: {user_identifier}):")
+            for account in accounts:
+                print(f"  - {account}")
+        else:
+            print(f"No connected accounts found for user identifier: {user_identifier}")
+            
+        return account_count
+
+    def update_first_account_view_references(self, account_view):
+        """Update global references for the first account view."""
+        # This is a helper function to update references to account view elements
+        # We need to do this since we're now creating account views dynamically
+        
+        # Import the main_view module to update its variables
+        import sys
+        import os
+        sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        import views.main_view as main_view
+        
+        # Update references if the account view is valid
+        if account_view:
+            main_view.client_response_label = account_view.client_response_label
+            main_view.model_response_label = account_view.model_response_label
+
+    def handle_signin(self, email):
+        """
+        Handle the sign-in process with the provided email.
+        
+        Args:
+            email: The email address entered by the user
+        """
+        # Don't proceed if we're already in the process of signing in
+        if hasattr(self, '_signing_in') and self._signing_in:
+            print("Sign-in already in progress, ignoring duplicate request")
+            return
+            
+        try:
+            # Set flag to prevent duplicate sign-in
+            self._signing_in = True
+            
+            print(f"Attempting to sign in with email: {email}")
+            
+            # Get MongoDB database info
+            list_mongodb_info()
+            
+            # Find the user by email in the database
+            user = find_user_by_email(email)
+            
+            if user:
+                # User found, set as signed in
+                print(f"User found: {user.get('name', 'Unknown User')}")
+                
+                # Print user details for debugging
+                print(f"User details: _id={user.get('_id')}, type={type(user.get('_id'))}")
+                if 'accounts' in user:
+                    print(f"User has {len(user['accounts'])} accounts in the user document")
+                    print(f"Accounts: {user['accounts']}")
+                else:
+                    print("User has no 'accounts' field in the user document")
+                    print(f"Available fields: {list(user.keys())}")
+                
+                # Store the user ID in the user_state module - convert ObjectId to string if needed
+                user_id = user.get('_id')
+                if hasattr(user_id, '__str__'):
+                    user_id = str(user_id)  # Convert ObjectId to string
+                    print(f"Converted _id to string: {user_id}")
+                    
+                set_current_user_id(user_id)
+                
+                # Set the user as signed in
+                set_user_signed_in(True)
+                
+                # Reinitialize the UI to show account views
+                import views.main_view as main_view
+                main_view.initialize_views()
+                
+                # Now initialize the message watcher and other signed-in functionality
+                set_button_handler(self.copy_response_to_clipboard)
+                set_issue_button_handler(self.report_issue)
+                self.init_message_watcher()
+                
+                # Debug: Print the user_id that will be used
+                print(f"About to fetch accounts using user_id: {user_id} (type: {type(user_id)})")
+                
+                # Fetch connected accounts and create account views
+                accounts = fetch_connected_accounts(user_id)
+                
+                # Debug: Print the accounts result
+                print(f"fetch_connected_accounts returned: {accounts}")
+                
+                # Create account views based on the actual count
+                if accounts and len(accounts) > 0:
+                    account_count = len(accounts)
+                    print(f"Found {account_count} connected accounts")
+                    
+                    for i, account_name in enumerate(accounts):
+                        # Create a new account view
+                        new_account_view = add_account_view()
+                        
+                        # Update the account name
+                        if new_account_view:
+                            new_account_view.update_client_name(account_name)
+                        
+                        # For the first account view, set it up to receive updates
+                        if i == 0:
+                            self.update_first_account_view_references(new_account_view)
+                    
+                    print(f"Successfully signed in with {account_count} connected accounts!")
+                else:
+                    print("No connected accounts found for the signed-in user")
+                    
+                print(f"Successfully signed in as {email}!")
+            else:
+                # User not found
+                print(f"No user found with email: {email}")
+                
+                # Show error on the UI
+                self._show_signin_error(f"No user with email '{email}' exists. Please check and try again.")
+                
+        finally:
+            # Clear sign-in flag when done
+            self._signing_in = False
+
+    def _show_signin_error(self, error_message):
+        """
+        Show an error message in the sign-in view.
+        
+        Args:
+            error_message: The error message to display
+        """
+        # Import here to avoid circular import
+        import views.main_view as main_view
+        
+        # Make sure signin_view exists and has an error_label
+        if hasattr(main_view, 'signin_view') and main_view.signin_view:
+            if hasattr(main_view.signin_view, 'error_label'):
+                main_view.signin_view.error_label.config(text=error_message)
 

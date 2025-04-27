@@ -13,10 +13,20 @@ class AccountView:
         self.button_handler = None
         self.issue_button_handler = None
         
+        # Create main container frame for the entire AccountView
+        self.container_frame = tk.Frame(
+            self.parent,
+            bg="#2c2f36",  # Match background
+            padx=0,
+            pady=0
+        )
+        self.container_frame.pack(fill=tk.X, padx=0, pady=0)
+        
         self._create_client_section()
         self._create_model_section()
         self._setup_button_styles()
         self._create_button_section()
+        self._create_separator_line()
         
         # Initial setup
         self.update_client_text("Waiting for client message...")
@@ -26,12 +36,12 @@ class AccountView:
         """Create the client name and response section."""
         # Frame for client message for better resizing
         self.client_frame = tk.Frame(
-            self.parent,
+            self.container_frame,  # Use container_frame instead of parent
             padx=5,
             pady=5,
             bg="#2c2f36"  # Match background
         )
-        self.client_frame.pack(fill=tk.X, padx=5, pady=5)
+        self.client_frame.pack(fill=tk.X, padx=5, pady=(5, 0))  # Removed bottom padding
         
         # Create client name label (bold)
         self.client_name_label = tk.Label(
@@ -58,7 +68,7 @@ class AccountView:
             relief=tk.FLAT,
             highlightthickness=0,
         )
-        self.client_response_label.pack(fill=tk.X, padx=5, pady=5)
+        self.client_response_label.pack(fill=tk.X, padx=5, pady=(5, 0))  # Reduced bottom padding
         self.client_response_label.insert(tk.END, "Waiting for client message...")
         self.client_response_label.config(state=tk.DISABLED)  # Make it read-only
     
@@ -66,14 +76,14 @@ class AccountView:
         """Create the model response section."""
         # Create a model response section with auto-height
         self.model_response_frame = tk.Frame(
-            self.parent,
+            self.container_frame,  # Use container_frame instead of parent
             padx=5,
-            pady=5,
+            pady=0,  # Removed vertical padding inside the frame
             bg="#1e2129",  # Darker background for contrast
             highlightbackground="#4a5568",  # Border color
             highlightthickness=1  # Border thickness
         )
-        self.model_response_frame.pack(pady=self.model_vertical_spacing, padx=10, fill=tk.X)  # Only fill horizontally
+        self.model_response_frame.pack(pady=(2, 0), padx=10, fill=tk.X)  # Minimal top padding
         
         # Create a model response text widget with dynamic height
         self.model_response_label = tk.Text(
@@ -83,14 +93,14 @@ class AccountView:
             width=38,  # Fixed width in characters
             height=3,  # Initial height (will adjust)
             padx=5,
-            pady=5,
+            pady=5,  # Use single value for the widget constructor
             bg="#1e2129",  # Dark background
             fg="#ffffff",  # White text
             relief=tk.FLAT,
             highlightthickness=0,
             cursor="arrow"  # Use arrow cursor to appear more like a label
         )
-        self.model_response_label.pack(padx=5, pady=self.model_vertical_spacing, fill=tk.BOTH)  # Fill both to allow expansion
+        self.model_response_label.pack(padx=5, pady=(5, 0), fill=tk.BOTH)  # Remove bottom padding
         self.model_response_label.insert(tk.END, "Waiting for input...")
         self.model_response_label.config(state=tk.DISABLED)  # Make it read-only
     
@@ -133,20 +143,24 @@ class AccountView:
         """Create buttons section with action and issue buttons."""
         # Create button frame with border - fixed height and no pack_propagate
         self.button_frame = tk.Frame(
-            self.parent,
+            self.container_frame,  # Use container_frame instead of parent
             bg="#2c2f36",  # Match background color
-            height=80  # Increased fixed height for more space
+            height=50,  # Further reduced height
+            bd=0,  # No border
+            highlightthickness=0  # No highlight border
         )
-        self.button_frame.pack(fill=tk.X, padx=10, pady=(self.model_vertical_spacing, 20))  # Top padding controlled by variable
+        # Use negative padding to pull the frame up slightly, eliminating any gap
+        self.button_frame.pack(fill=tk.X, padx=10, pady=0, ipady=0)
         self.button_frame.pack_propagate(False)  # Prevent frame from shrinking
         
         # Create a container to right-align the buttons
         self.button_container = tk.Frame(
             self.button_frame,
             bg="#2c2f36",  # Match background color
-            height=80  # Increased height to match parent
+            height=50,  # Reduced height to match parent
+            bd=0  # No border
         )
-        self.button_container.pack(side=tk.RIGHT, pady=15)  # Increased padding
+        self.button_container.pack(side=tk.RIGHT, pady=0)  # No vertical padding
         
         # Create Issue button
         self.issue_button = ttk.Button(
@@ -171,7 +185,14 @@ class AccountView:
         if not name:
             self.client_name_label.config(text="Unknown Client")
         else:
-            self.client_name_label.config(text=name)
+            # Handle if name is a simple string or a complex object
+            if isinstance(name, dict) and 'name' in name:
+                display_name = name['name']
+            else:
+                display_name = str(name)  # Convert to string to be safe
+                
+            self.client_name_label.config(text=display_name)
+            
         self.client_name_label.update_idletasks()
     
     def update_client_text(self, text):
@@ -211,6 +232,9 @@ class AccountView:
         
         self.model_response_label.config(state=tk.DISABLED)  # Make it read-only again
         self.model_response_label.see("1.0")  # Scroll to the beginning
+        
+        # Force immediate update to remove any lag in UI updates
+        self.parent.update_idletasks()
     
     def _button_clicked(self):
         """Handle action button click."""
@@ -231,4 +255,15 @@ class AccountView:
     
     def set_issue_button_handler(self, handler_function):
         """Set the handler function for the issue button."""
-        self.issue_button_handler = handler_function 
+        self.issue_button_handler = handler_function
+    
+    def _create_separator_line(self):
+        """Create a white horizontal separator line at the bottom of the view."""
+        self.separator_line = tk.Frame(
+            self.container_frame,  # Use container_frame instead of parent
+            height=1,  # 1 pixel high line
+            bg="grey",  # White color
+            bd=0,  # No border
+            highlightthickness=0  # No highlight
+        )
+        self.separator_line.pack(fill=tk.X, padx=0, pady=(10, 5), side=tk.BOTTOM)  # Attach to bottom with some padding 
