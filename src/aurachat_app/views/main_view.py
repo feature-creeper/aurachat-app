@@ -4,6 +4,7 @@ from .signin_view import SignInView
 from .navbar_view import NavbarView
 from .chats_container_view import ChatsContainerView
 from .accounts_container_view import AccountsContainerView
+from .container_manager import set_containers, show_chats_container, show_accounts_container
 import sys
 import os
 
@@ -40,38 +41,15 @@ content_frame.pack(fill=tk.BOTH, expand=True)
 chats_container = ChatsContainerView(content_frame)
 accounts_container = AccountsContainerView(content_frame)
 
+# Set the containers in the container manager
+set_containers(chats_container, accounts_container, root)
+
 # Initially show chats container and hide accounts container
 chats_container.container_frame.pack(fill=tk.BOTH, expand=True)
 accounts_container.container_frame.pack_forget()
 
 # Variables for view references
 signin_view = None
-
-def show_chats_container():
-    """Show the chats container and hide the accounts container."""
-    # Hide accounts container first
-    accounts_container.container_frame.pack_forget()
-    # Show chats container
-    chats_container.container_frame.pack(fill=tk.BOTH, expand=True)
-    # Update the window
-    root.update_idletasks()
-    # Force a redraw
-    root.update()
-    # Print debug info
-    print("Showing chats container")
-
-def show_accounts_container():
-    """Show the accounts container and hide the chats container."""
-    # Hide chats container first
-    chats_container.container_frame.pack_forget()
-    # Show accounts container
-    accounts_container.container_frame.pack(fill=tk.BOTH, expand=True)
-    # Update the window
-    root.update_idletasks()
-    # Force a redraw
-    root.update()
-    # Print debug info
-    print("Showing accounts container")
 
 # Initialize based on sign-in state
 def initialize_views():

@@ -22,7 +22,8 @@ from views.main_view import (
     show_chats_container,
     show_accounts_container,
     set_accounts_handler,
-    add_account_view
+    add_account_view,
+    accounts_container
 )
 from db.db_watcher import MessagesWatcher
 from db.db_client import get_latest_client_message, fetch_connected_accounts, find_user_by_email, list_mongodb_info
@@ -381,6 +382,9 @@ class MainViewController:
                 import views.main_view as main_view
                 main_view.initialize_views()
                 
+                # Show accounts container after sign-in
+                show_accounts_container()
+                
                 # Now initialize the message watcher and other signed-in functionality
                 set_button_handler(self.copy_response_to_clipboard)
                 set_issue_button_handler(self.report_issue)
@@ -395,7 +399,7 @@ class MainViewController:
                 # Debug: Print the accounts result
                 print(f"fetch_connected_accounts returned: {accounts}")
                 
-                # Create chat views based on the actual count
+                # Create both chat views and account views based on the actual count
                 if accounts and len(accounts) > 0:
                     account_count = len(accounts)
                     print(f"Found {account_count} connected accounts")
@@ -404,9 +408,14 @@ class MainViewController:
                         # Create a new chat view
                         new_chat_view = add_chat_view()
                         
-                        # Update the account name
+                        # Create a new account view
+                        account_view = add_account_view()
+                        
+                        # Update both views with the account name
                         if new_chat_view:
                             new_chat_view.update_client_name(account_name)
+                        if account_view:
+                            account_view.update_name(account_name)
                     
                     print(f"Successfully signed in with {account_count} connected accounts!")
                 else:
@@ -444,6 +453,9 @@ class MainViewController:
         if user_signedin():
             # Show the accounts container
             show_accounts_container()
+            
+            # Clear existing account views
+            accounts_container.clear_account_views()
             
             # Get the current user ID
             user_id = get_current_user_id()

@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from .container_manager import show_chats_container
 
 class AccountView:
     """A view that displays account information."""
@@ -43,6 +44,30 @@ class AccountView:
         # Create a separator
         self.separator = ttk.Separator(self.frame, orient="horizontal")
         self.separator.pack(fill=tk.X, pady=5)
+        
+        # Bind click event to the entire frame
+        self.frame.bind("<Button-1>", self._on_click)
+        self.info_frame.bind("<Button-1>", self._on_click)
+        self.name_label.bind("<Button-1>", self._on_click)
+        self.email_label.bind("<Button-1>", self._on_click)
+        
+        # Add hover effect
+        self.frame.bind("<Enter>", self._on_enter)
+        self.frame.bind("<Leave>", self._on_leave)
+    
+    def _on_click(self, event):
+        """Handle click event on the account view."""
+        show_chats_container()
+    
+    def _on_enter(self, event):
+        """Handle mouse enter event."""
+        self.frame.configure(bg="#3c3f46")  # Slightly lighter background
+        self.info_frame.configure(bg="#3c3f46")
+    
+    def _on_leave(self, event):
+        """Handle mouse leave event."""
+        self.frame.configure(bg="#2c2f36")  # Original background
+        self.info_frame.configure(bg="#2c2f36")
     
     def update_name(self, name):
         """
