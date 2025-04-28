@@ -7,7 +7,22 @@ import time
 
 # Add the parent directory to the Python path so we can import from views
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from views.main_view import root, client_response_label, model_response_label, update_client_text, update_model_text, initialize_ui, set_button_handler, set_issue_button_handler, update_client_name, add_account_view, get_account_views, set_signin_handler, initialize_views
+from views.main_view import (
+    root,
+    update_client_text,
+    update_model_text,
+    initialize_ui,
+    set_button_handler,
+    set_issue_button_handler,
+    update_client_name,
+    add_chat_view,
+    get_chat_views,
+    set_signin_handler,
+    initialize_views,
+    show_chats_container,
+    show_accounts_container,
+    set_accounts_handler
+)
 from db.db_watcher import MessagesWatcher
 from db.db_client import get_latest_client_message, fetch_connected_accounts, find_user_by_email, list_mongodb_info
 from model.user_state import user_signedin, set_user_signed_in, get_current_user_id, set_current_user_id
@@ -77,6 +92,9 @@ class MainViewController:
         # Store this handler as a bound method that can be reused
         self.signin_handler_method = self.handle_signin
         set_signin_handler(self.signin_handler_method)
+        
+        # Set up accounts handler
+        set_accounts_handler(self.handle_accounts_click)
         
         # Check if user is signed in
         if user_signedin():
@@ -225,15 +243,18 @@ class MainViewController:
     
     def copy_response_to_clipboard(self):
         """Copy the current model response to the clipboard."""
-        # Get the text from the model response text widget
-        model_response_label.config(state=tk.NORMAL)
-        response_text = model_response_label.get("1.0", tk.END).strip()
-        model_response_label.config(state=tk.DISABLED)
-        
-        # Copy to clipboard using tkinter clipboard
-        self.root.clipboard_clear()
-        self.root.clipboard_append(response_text)
-        self.root.update()  # Required to finalize clipboard operations
+        # Get the text from the first chat view's model response
+        chat_views = get_chat_views()
+        if chat_views:
+            chat_view = chat_views[0]
+            chat_view.model_response_label.config(state=tk.NORMAL)
+            response_text = chat_view.model_response_label.get("1.0", tk.END).strip()
+            chat_view.model_response_label.config(state=tk.DISABLED)
+            
+            # Copy to clipboard using tkinter clipboard
+            self.root.clipboard_clear()
+            self.root.clipboard_append(response_text)
+            self.root.update()  # Required to finalize clipboard operations
 
 
     def report_issue(self):
@@ -243,26 +264,29 @@ class MainViewController:
         # Get the current client and model messages
         client_message = self.view_model.client_message_text
         
-        # Get text directly from the model response widget
-        model_response_label.config(state=tk.NORMAL)
-        model_message = model_response_label.get("1.0", tk.END).strip()
-        model_response_label.config(state=tk.DISABLED)
-        
-        # Print detailed information that could be useful for troubleshooting
-        print(f"Issue report details:")
-        print(f"Chat ID: {CONFIG_CHAT_ID}")
-        print(f"Client message: {client_message}")
-        print(f"Model response: {model_message}")
-        
-        # Provide visual feedback
-        original_text = self.view_model.client_message_text
-        self.update_client_message("Issue reported!")
-        
-        # Reset client message after 1.5 seconds
-        def reset_message():
-            self.update_client_message(original_text)
-        
-        self.root.after(1500, reset_message)
+        # Get text from the first chat view's model response
+        chat_views = get_chat_views()
+        if chat_views:
+            chat_view = chat_views[0]
+            chat_view.model_response_label.config(state=tk.NORMAL)
+            model_message = chat_view.model_response_label.get("1.0", tk.END).strip()
+            chat_view.model_response_label.config(state=tk.DISABLED)
+            
+            # Print detailed information that could be useful for troubleshooting
+            print(f"Issue report details:")
+            print(f"Chat ID: {CONFIG_CHAT_ID}")
+            print(f"Client message: {client_message}")
+            print(f"Model response: {model_message}")
+            
+            # Provide visual feedback
+            original_text = self.view_model.client_message_text
+            self.update_client_message("Issue reported!")
+            
+            # Reset client message after 1.5 seconds
+            def reset_message():
+                self.update_client_message(original_text)
+            
+            self.root.after(1500, reset_message)
 
     def fetch_and_print_connected_accounts(self, user_identifier):
         """
@@ -370,22 +394,18 @@ class MainViewController:
                 # Debug: Print the accounts result
                 print(f"fetch_connected_accounts returned: {accounts}")
                 
-                # Create account views based on the actual count
+                # Create chat views based on the actual count
                 if accounts and len(accounts) > 0:
                     account_count = len(accounts)
                     print(f"Found {account_count} connected accounts")
                     
                     for i, account_name in enumerate(accounts):
-                        # Create a new account view
-                        new_account_view = add_account_view()
+                        # Create a new chat view
+                        new_chat_view = add_chat_view()
                         
                         # Update the account name
-                        if new_account_view:
-                            new_account_view.update_client_name(account_name)
-                        
-                        # For the first account view, set it up to receive updates
-                        if i == 0:
-                            self.update_first_account_view_references(new_account_view)
+                        if new_chat_view:
+                            new_chat_view.update_client_name(account_name)
                     
                     print(f"Successfully signed in with {account_count} connected accounts!")
                 else:
@@ -417,4 +437,11 @@ class MainViewController:
         if hasattr(main_view, 'signin_view') and main_view.signin_view:
             if hasattr(main_view.signin_view, 'error_label'):
                 main_view.signin_view.error_label.config(text=error_message)
+
+    def handle_accounts_click(self):
+        """Handle the accounts button click event."""
+        if user_signedin():
+            show_accounts_container()
+        else:
+            self._show_signin_error("Please sign in to view accounts")
 
