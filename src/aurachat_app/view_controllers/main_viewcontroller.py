@@ -21,7 +21,8 @@ from views.main_view import (
     initialize_views,
     show_chats_container,
     show_accounts_container,
-    set_accounts_handler
+    set_accounts_handler,
+    add_account_view
 )
 from db.db_watcher import MessagesWatcher
 from db.db_client import get_latest_client_message, fetch_connected_accounts, find_user_by_email, list_mongodb_info
@@ -441,7 +442,22 @@ class MainViewController:
     def handle_accounts_click(self):
         """Handle the accounts button click event."""
         if user_signedin():
+            # Show the accounts container
             show_accounts_container()
+            
+            # Get the current user ID
+            user_id = get_current_user_id()
+            if user_id:
+                # Fetch connected accounts
+                accounts = fetch_connected_accounts(user_id)
+                if accounts:
+                    # Create an account view for each account
+                    for account_name in accounts:
+                        account_view = add_account_view()
+                        if account_view:
+                            account_view.update_name(account_name)
+                else:
+                    print("No connected accounts found")
         else:
             self._show_signin_error("Please sign in to view accounts")
 
