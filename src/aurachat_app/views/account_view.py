@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from .container_manager import show_chats_container
+from api.onlyfansapi_client import OnlyFansAPIClient
 
 class AccountView:
     """A view that displays account information."""
@@ -13,6 +14,7 @@ class AccountView:
             parent: The parent frame to pack this view into
         """
         self.parent = parent
+        self.account_name = None
         
         # Create main frame
         self.frame = tk.Frame(parent, bg="#2c2f36", padx=10, pady=10)
@@ -57,7 +59,19 @@ class AccountView:
     
     def _on_click(self, event):
         """Handle click event on the account view."""
-        show_chats_container()
+        if self.account_name:
+            # Initialize the OnlyFans API client with default API key
+            api_client = OnlyFansAPIClient()
+            
+            # Get chats for the selected account
+            try:
+                chats = api_client.get_chats(self.account_name)
+                print(f"Retrieved chats for account {self.account_name}: {chats}")
+                
+                # Show the chats container
+                show_chats_container()
+            except Exception as e:
+                print(f"Error getting chats: {str(e)}")
     
     def _on_enter(self, event):
         """Handle mouse enter event."""
@@ -76,6 +90,7 @@ class AccountView:
         Args:
             name (str): The account name to display
         """
+        self.account_name = name
         self.name_label.config(text=f"Account Name: {name}")
     
     def update_email(self, email):

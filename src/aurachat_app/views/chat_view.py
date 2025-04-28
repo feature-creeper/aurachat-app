@@ -12,6 +12,7 @@ class ChatView:
         # Button handler callbacks
         self.button_handler = None
         self.issue_button_handler = None
+        self.generate_handler = None
         
         # Create main container frame for the entire ChatView
         self.container_frame = tk.Frame(
@@ -109,12 +110,12 @@ class ChatView:
         style = ttk.Style()
         style.theme_use("default")  # Use a consistent base theme
         
-        # Style for Copy button - increased vertical padding
+        # Style for Copy button - reduced padding
         style.configure("Copy.TButton",
-            font=("Arial", 14),
+            font=("Arial", 12),  # Smaller font
             foreground="white",
             background="#007aff",
-            padding=(20, 0),  # Significantly increased padding
+            padding=(10, 0),  # Reduced padding
             relief="flat"
         )
         
@@ -124,12 +125,12 @@ class ChatView:
             background=[("active", "#007aff"), ("pressed", "#007aff"), ("disabled", "#007aff"), ("focus", "#007aff")]
         )
         
-        # Style for Issue button - increased vertical padding
+        # Style for Issue button - reduced padding
         style.configure("Issue.TButton",
-            font=("Arial", 14),
+            font=("Arial", 12),  # Smaller font
             foreground="white",
             background="#900404",  # Red color as specified
-            padding=(20, 0),  # Significantly increased padding
+            padding=(10, 0),  # Reduced padding
             relief="flat"
         )
         
@@ -138,6 +139,21 @@ class ChatView:
             foreground=[("active", "white"), ("pressed", "white"), ("disabled", "white"), ("focus", "white")],
             background=[("active", "#900404"), ("pressed", "#900404"), ("disabled", "#900404"), ("focus", "#900404")]
         )
+        
+        # Style for Generate button - reduced padding
+        style.configure("Generate.TButton",
+            font=("Arial", 12),  # Smaller font
+            foreground="white",
+            background="#34c759",  # Green color
+            padding=(10, 0),  # Reduced padding
+            relief="flat"
+        )
+        
+        # Apply the same look to all states for Generate button
+        style.map("Generate.TButton",
+            foreground=[("active", "white"), ("pressed", "white"), ("disabled", "white"), ("focus", "white")],
+            background=[("active", "#34c759"), ("pressed", "#34c759"), ("disabled", "#34c759"), ("focus", "#34c759")]
+        )
     
     def _create_button_section(self):
         """Create buttons section with action and issue buttons."""
@@ -145,7 +161,7 @@ class ChatView:
         self.button_frame = tk.Frame(
             self.container_frame,  # Use container_frame instead of parent
             bg="#2c2f36",  # Match background color
-            height=50,  # Further reduced height
+            height=40,  # Reduced height
             bd=0,  # No border
             highlightthickness=0  # No highlight border
         )
@@ -157,19 +173,19 @@ class ChatView:
         self.button_container = tk.Frame(
             self.button_frame,
             bg="#2c2f36",  # Match background color
-            height=50,  # Reduced height to match parent
+            height=40,  # Reduced height to match parent
             bd=0  # No border
         )
         self.button_container.pack(side=tk.RIGHT, pady=0)  # No vertical padding
         
-        # Create Issue button
-        self.issue_button = ttk.Button(
+        # Create Generate button
+        self.generate_button = ttk.Button(
             self.button_container,
-            text="Issue",
-            style="Issue.TButton",
-            command=self._issue_button_clicked
+            text="Generate response",
+            style="Generate.TButton",
+            command=self._generate_button_clicked
         )
-        self.issue_button.pack(pady=5, padx=10, side=tk.LEFT, ipady=8)  # Increased internal y-padding and horizontal spacing
+        self.generate_button.pack(pady=2, padx=5, side=tk.LEFT, ipady=4)  # Reduced padding
         
         # Create Copy button
         self.action_button = ttk.Button(
@@ -178,7 +194,16 @@ class ChatView:
             style="Copy.TButton",
             command=self._button_clicked
         )
-        self.action_button.pack(pady=5, padx=10, side=tk.LEFT, ipady=8)  # Increased internal y-padding and horizontal spacing
+        self.action_button.pack(pady=2, padx=5, side=tk.LEFT, ipady=4)  # Reduced padding
+        
+        # Create Issue button
+        self.issue_button = ttk.Button(
+            self.button_container,
+            text="Issue",
+            style="Issue.TButton",
+            command=self._issue_button_clicked
+        )
+        self.issue_button.pack(pady=2, padx=5, side=tk.LEFT, ipady=4)  # Reduced padding
     
     def update_client_name(self, name):
         """Update the client name label with the provided name."""
@@ -249,6 +274,11 @@ class ChatView:
             # Default behavior if no handler is set
             print("Issue detected")
     
+    def _generate_button_clicked(self):
+        """Handle the generate button click event."""
+        if self.generate_handler:
+            self.generate_handler()
+    
     def set_button_handler(self, handler_function):
         """Set the handler function for the action button."""
         self.button_handler = handler_function
@@ -256,6 +286,10 @@ class ChatView:
     def set_issue_button_handler(self, handler_function):
         """Set the handler function for the issue button."""
         self.issue_button_handler = handler_function
+    
+    def set_generate_handler(self, handler_function):
+        """Set the handler function for the generate button."""
+        self.generate_handler = handler_function
     
     def _create_separator_line(self):
         """Create a separator line between chat views."""

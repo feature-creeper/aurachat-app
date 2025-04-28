@@ -28,6 +28,7 @@ from views.main_view import (
 from db.db_watcher import MessagesWatcher
 from db.db_client import get_latest_client_message, fetch_connected_accounts, find_user_by_email, list_mongodb_info
 from model.user_state import user_signedin, set_user_signed_in, get_current_user_id, set_current_user_id
+from api.onlyfansapi_client import OnlyFansAPIClient
 
 # Import the chat_id from config.py using absolute path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -450,26 +451,29 @@ class MainViewController:
 
     def handle_accounts_click(self):
         """Handle the accounts button click event."""
-        if user_signedin():
-            # Show the accounts container
-            show_accounts_container()
+        # Get the selected account from the accounts container
+        selected_account = None
+        for child in accounts_container.container_frame.winfo_children():
+            if hasattr(child, 'selected') and child.selected:
+                selected_account = child
+                break
+        
+        if selected_account:
+            # Get the account name from the selected account
+            account_name = selected_account.account_name
             
-            # Clear existing account views
-            accounts_container.clear_account_views()
+            # Initialize the OnlyFans API client
+            api_client = OnlyFansAPIClient(auth_token="your_auth_token_here")  # TODO: Get actual auth token
             
-            # Get the current user ID
-            user_id = get_current_user_id()
-            if user_id:
-                # Fetch connected accounts
-                accounts = fetch_connected_accounts(user_id)
-                if accounts:
-                    # Create an account view for each account
-                    for account_name in accounts:
-                        account_view = add_account_view()
-                        if account_view:
-                            account_view.update_name(account_name)
-                else:
-                    print("No connected accounts found")
+            # Get chats for the selected account
+            try:
+                chats = api_client.get_chats(account_name)
+                print(f"Retrieved chats for account {account_name}: {chats}")
+                
+                # Show the chats container
+                show_chats_container()
+            except Exception as e:
+                print(f"Error getting chats: {str(e)}")
         else:
-            self._show_signin_error("Please sign in to view accounts")
+            print("No account selected")
 
