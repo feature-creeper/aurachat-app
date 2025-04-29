@@ -10,11 +10,12 @@ class UserManager:
         self._current_user = None
         
     def sign_in(self, email: str) -> bool:
-        """Check if a user exists with the given email."""
-        print(f"UserManager: Attempting to sign in with email: {email}")
-        user = db_client.get_user_by_email(email)
-        print(f"UserManager: User lookup result: {user is not None}")
-        return user is not None
+        """Check if a user exists with the given email and set the current user."""
+        user_data = db_client.get_user_by_email(email)
+        if user_data:
+            self._current_user = User.from_dict(user_data)
+            return True
+        return False
         
     def sign_out(self):
         """Sign out the current user."""
