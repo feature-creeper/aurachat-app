@@ -1,4 +1,4 @@
-from controllers.root_controller import RootController
+from aurachat_helper_app.controllers.root_controller import RootController
 
 def main():
     """Main entry point for the application."""

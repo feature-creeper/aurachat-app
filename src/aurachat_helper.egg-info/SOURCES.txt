@@ -1,0 +1,5 @@
+setup.py
+src/aurachat_helper.egg-info/PKG-INFO
+src/aurachat_helper.egg-info/SOURCES.txt
+src/aurachat_helper.egg-info/dependency_links.txt
+src/aurachat_helper.egg-info/top_level.txt

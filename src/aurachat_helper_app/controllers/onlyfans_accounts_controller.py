@@ -6,15 +6,18 @@ import tkinter as tk
 class OnlyFansAccountsController:
     """Controller class for managing OnlyFans accounts."""
     
-    def __init__(self, parent):
+    def __init__(self, parent, user_manager):
         """Initialize the OnlyFans accounts controller."""
         self.parent = parent
+        self.user_manager = user_manager
         self.view = OnlyFansAccountsView(parent)
         self.accounts = []
         
-        # Add sample accounts
-        self.add_account({'username': 'sample_account1'})
-        self.add_account({'username': 'sample_account2'})
+        # Add user's OnlyFans accounts
+        current_user = self.user_manager.get_current_user()
+        if current_user and current_user.onlyfans_account_ids:
+            for account_id in current_user.onlyfans_account_ids:
+                self.add_account({'username': account_id})
         
     def handle_account_click(self, account_info):
         """Handle account cell click event."""

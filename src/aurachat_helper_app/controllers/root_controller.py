@@ -1,6 +1,6 @@
-from views.root_view import RootView
-from controllers.signin_controller import SignInController
-from controllers.onlyfans_accounts_controller import OnlyFansAccountsController
+from aurachat_helper_app.views.root_view import RootView
+from aurachat_helper_app.controllers.signin_controller import SignInController
+from aurachat_helper_app.controllers.onlyfans_accounts_controller import OnlyFansAccountsController
 import tkinter as tk
 
 class RootController:

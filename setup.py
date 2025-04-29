@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="aurachat_app",
+    name="aurachat_helper",
     version="0.1",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
