@@ -20,7 +20,6 @@ class NavbarView:
             text="Accounts",
             command=self._on_accounts_click
         )
-        self.accounts_button.pack(side=tk.LEFT, padx=5)
         
         # Store the click handler (will be set by set_accounts_handler)
         self._accounts_handler = None
@@ -42,4 +41,18 @@ class NavbarView:
             print("Calling accounts handler")
             self._accounts_handler()
         else:
-            print("No accounts handler set") 
+            print("No accounts handler set")
+            
+    def update_visibility(self, is_chats_visible):
+        """
+        Update the visibility of the Accounts button based on container state.
+        
+        Args:
+            is_chats_visible: Boolean indicating if chats container is visible
+        """
+        if is_chats_visible:
+            # Show Accounts button if chats container is visible
+            self.accounts_button.pack(side=tk.LEFT, padx=5)
+        else:
+            # Hide Accounts button if chats container is not visible
+            self.accounts_button.pack_forget() 

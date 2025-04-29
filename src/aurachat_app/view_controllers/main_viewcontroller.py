@@ -451,29 +451,6 @@ class MainViewController:
 
     def handle_accounts_click(self):
         """Handle the accounts button click event."""
-        # Get the selected account from the accounts container
-        selected_account = None
-        for child in accounts_container.container_frame.winfo_children():
-            if hasattr(child, 'selected') and child.selected:
-                selected_account = child
-                break
-        
-        if selected_account:
-            # Get the account name from the selected account
-            account_name = selected_account.account_name
-            
-            # Initialize the OnlyFans API client
-            api_client = OnlyFansAPIClient(auth_token="your_auth_token_here")  # TODO: Get actual auth token
-            
-            # Get chats for the selected account
-            try:
-                chats = api_client.get_chats(account_name)
-                print(f"Retrieved chats for account {account_name}: {chats}")
-                
-                # Show the chats container
-                show_chats_container()
-            except Exception as e:
-                print(f"Error getting chats: {str(e)}")
-        else:
-            print("No account selected")
+        # Show the accounts container
+        show_accounts_container()
 

@@ -4,13 +4,15 @@ import tkinter as tk
 chats_container = None
 accounts_container = None
 root_window = None
+navbar = None
 
-def set_containers(chats, accounts, root):
+def set_containers(chats, accounts, root, nav):
     """Set the global container references."""
-    global chats_container, accounts_container, root_window
+    global chats_container, accounts_container, root_window, navbar
     chats_container = chats
     accounts_container = accounts
     root_window = root
+    navbar = nav
 
 def show_chats_container():
     """Show the chats container and hide the accounts container."""
@@ -23,6 +25,9 @@ def show_chats_container():
         root_window.update_idletasks()
         # Force a redraw
         root_window.update()
+        # Update navbar visibility
+        if navbar:
+            navbar.update_visibility(True)
         # Print debug info
         print("Showing chats container")
 
@@ -37,5 +42,8 @@ def show_accounts_container():
         root_window.update_idletasks()
         # Force a redraw
         root_window.update()
+        # Update navbar visibility
+        if navbar:
+            navbar.update_visibility(False)
         # Print debug info
         print("Showing accounts container") 

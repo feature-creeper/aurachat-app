@@ -26,12 +26,21 @@ root.attributes('-topmost', True)  # Stay on top of other windows
 # Use standard colors for macOS Dark Mode compatibility
 root.configure(bg="#2c2f36")  # Standard background color
 
-# Create a scrollable container for all account views
-container_frame = tk.Frame(root, bg="#2c2f36")
-container_frame.pack(fill=tk.BOTH, expand=True)
+# Create top frame for navbar
+top_frame = tk.Frame(root, bg="#2c2f36")
+top_frame.pack(fill=tk.X, side=tk.TOP)
 
-# Create the navbar
-navbar = NavbarView(container_frame)
+# Create the navbar in the top frame
+navbar = NavbarView(top_frame)
+navbar.container_frame.pack(fill=tk.X, padx=10, pady=5)
+
+# Create bottom frame for content
+bottom_frame = tk.Frame(root, bg="#2c2f36")
+bottom_frame.pack(fill=tk.BOTH, expand=True, side=tk.BOTTOM)
+
+# Create a scrollable container for all account views
+container_frame = tk.Frame(bottom_frame, bg="#2c2f36")
+container_frame.pack(fill=tk.BOTH, expand=True)
 
 # Create a content frame to hold the containers
 content_frame = tk.Frame(container_frame, bg="#2c2f36")
@@ -42,11 +51,14 @@ chats_container = ChatsContainerView(content_frame)
 accounts_container = AccountsContainerView(content_frame)
 
 # Set the containers in the container manager
-set_containers(chats_container, accounts_container, root)
+set_containers(chats_container, accounts_container, root, navbar)
 
 # Initially show chats container and hide accounts container
 chats_container.container_frame.pack(fill=tk.BOTH, expand=True)
 accounts_container.container_frame.pack_forget()
+
+# Update navbar visibility
+navbar.update_visibility(True)
 
 # Variables for view references
 signin_view = None
@@ -69,7 +81,13 @@ def initialize_views():
             signin_view = None
         # Show chats container
         show_chats_container()
+        # Show navbar
+        navbar.container_frame.pack(fill=tk.X, padx=10, pady=5)
+        # Update navbar visibility
+        navbar.update_visibility(True)
     else:
+        # Hide navbar
+        navbar.container_frame.pack_forget()
         # Create sign-in view
         signin_view = SignInView(chats_container.scrollable_frame)
         
