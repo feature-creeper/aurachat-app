@@ -17,12 +17,12 @@ class OnlyFansAccountsController:
         current_user = self.user_manager.get_current_user()
         if current_user and current_user.onlyfans_account_ids:
             for account_id in current_user.onlyfans_account_ids:
-                self.add_account({'username': account_id})
+                self.add_account({'username': account_id, 'id': account_id})
         
     def handle_account_click(self, account_info):
         """Handle account cell click event."""
         self.view.frame.pack_forget()  # Hide accounts view
-        self.chats_controller = ChatsController(self.parent, self)
+        self.chats_controller = ChatsController(self.parent, self, account_info['id'])
         self.chats_controller.pack(expand=True, fill=tk.BOTH)
         
     def add_account(self, account_info):
