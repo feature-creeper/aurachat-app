@@ -53,14 +53,22 @@ class ChatsController:
             chat: The chat object
             
         Returns:
-            The best available display name
+            The best available display name in order: display_name → name → username
         """
-        if chat.fan.display_name:
+        # Check display_name first
+        if chat.fan.display_name and chat.fan.display_name.strip():
             return chat.fan.display_name
-        if chat.fan.name:
+            
+        # Then check name
+        if chat.fan.name and chat.fan.name.strip():
             return chat.fan.name
-        if chat.fan.username:
+            
+        # Finally check username
+        if chat.fan.username and chat.fan.username.strip():
             return chat.fan.username
+            
+        # If we get here, all fields are empty or None
+        print(f"Warning: No display name found for chat with fan ID {chat.fan.id}")
         return "Unknown User"
         
     def handle_chat_click(self, chat: Chat):
@@ -85,6 +93,8 @@ class ChatsController:
             response = self.webportal_client.sync_messages(self.account_id, str(self.selected_chat.fan.id))
             if response:
                 print("Sync successful:", response)
+                # Refresh the chat list after sync
+                self.fetch_and_display_chats()
             else:
                 print("Sync failed")
                 
@@ -110,11 +120,8 @@ class ChatsController:
         }
         self.view.add_chat(display_info, lambda: self.handle_chat_click(chat))
             
-    def pack(self, **kwargs):
-        """Pack the view into its parent and fetch chats."""
-        # First pack the view
-        self.view.pack(**kwargs)
-        
+    def fetch_and_display_chats(self):
+        """Fetch and display chats for the current account."""
         # Clear existing chats
         self.chats = []
         self.view.clear_chats()
@@ -123,4 +130,12 @@ class ChatsController:
         chats = self.chat_service.get_chats_for_account(self.account_id)
         if chats:
             for chat in chats:
-                self.add_chat(chat) 
+                self.add_chat(chat)
+                
+    def pack(self, **kwargs):
+        """Pack the view into its parent and fetch chats."""
+        # First pack the view
+        self.view.pack(**kwargs)
+        
+        # Fetch and display chats
+        self.fetch_and_display_chats() 

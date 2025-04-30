@@ -14,7 +14,7 @@ class UserManager:
         user_data = db_client.get_user_by_email(email)
         if user_data:
             self._current_user = User.from_dict(user_data)
-            return True
+        return True
         return False
         
     def sign_out(self):

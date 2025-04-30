@@ -89,8 +89,12 @@ class Chat:
         if not data:
             raise ValueError("Empty chat data")
             
-        fan_data = data.get('fan', {}) or {}
+        # If fan data is at root level, use it directly
+        fan_data = data if 'id' in data else data.get('fan', {}) or {}
         last_message_data = data.get('lastMessage', {}) or {}
+        
+        # Debug logging
+        print("Raw fan data:", fan_data)
         
         # Create Fan object with default values
         fan = Fan(

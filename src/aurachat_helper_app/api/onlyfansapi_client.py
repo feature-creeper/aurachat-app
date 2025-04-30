@@ -1,6 +1,6 @@
 import requests
 import os
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from dotenv import load_dotenv
 
 class OnlyFansAPIClient:
@@ -17,25 +17,32 @@ class OnlyFansAPIClient:
         self.base_url = "https://app.onlyfansapi.com/api"
         self.headers = {"Authorization": f"Bearer {token}"}
         
-    def get_chats(self, account_id: str) -> Optional[Dict[str, Any]]:
+    def get_chats(self, account_id: str, order: str = 'recent') -> List[Dict[str, Any]]:
         """
-        Fetch chats for a specific OnlyFans account.
+        Get chats for an account.
         
         Args:
-            account_id: The ID of the OnlyFans account
+            account_id: The account ID
+            order: Sort order for chats ('recent' or 'oldest')
             
         Returns:
-            Dict containing the chat data or None if the request failed
+            List of chat data
         """
         try:
-            url = f"{self.base_url}/{account_id}/chats"
-            response = requests.get(url, headers=self.headers)
-            response.raise_for_status()  # Raise exception for bad status codes
-            response_data = response.json()
-            return response_data
+            url = f"{self.base_url}/{account_id}/chats/"
+            print(f"Fetching chats from: {url}")
+            response = requests.get(
+                url,
+                params={'order': order},
+                headers=self.headers
+            )
+            response.raise_for_status()
+            data = response.json()
+            print("API Response:", data)
+            return data
         except requests.exceptions.RequestException as e:
-            print(f"Error fetching chats: {e}")
-            return None
+            print(f"Error getting chats: {e}")
+            return []
             
     def get_chat_messages(self, account_id: str, chat_id: str) -> Optional[Dict[str, Any]]:
         """
