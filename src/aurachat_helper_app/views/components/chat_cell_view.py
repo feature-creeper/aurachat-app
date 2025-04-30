@@ -21,13 +21,25 @@ class ChatCellView:
                                      font=('Helvetica', 10, 'bold'))
         self.fan_name_label.pack(anchor=tk.W)
         
+        # Last message container
+        message_container = tk.Frame(left_container, bg='#2b2b2b')
+        message_container.pack(fill=tk.X, expand=True)
+        
         # Last message
-        self.last_message_label = tk.Label(left_container,
+        self.last_message_label = tk.Label(message_container,
                                          text=chat_info['last_message'],
                                          bg='#2b2b2b',
                                          fg='#a0a0a0',
                                          font=('Helvetica', 9))
-        self.last_message_label.pack(anchor=tk.W)
+        self.last_message_label.pack(side=tk.LEFT, anchor=tk.W)
+        
+        # Last message time
+        self.last_message_time_label = tk.Label(message_container,
+                                              text=chat_info['last_message_time'],
+                                              bg='#2b2b2b',
+                                              fg='#a0a0a0',
+                                              font=('Helvetica', 9))
+        self.last_message_time_label.pack(side=tk.RIGHT, padx=(10, 0))
         
         # Unread count if any
         if chat_info.get('unread_count', 0) > 0:
@@ -42,10 +54,11 @@ class ChatCellView:
                                        pady=2)
             self.unread_label.pack()
         
-        # Make both the frame and labels clickable
+        # Make all elements clickable
         self.frame.bind('<Button-1>', self._on_click)
         self.fan_name_label.bind('<Button-1>', self._on_click)
         self.last_message_label.bind('<Button-1>', self._on_click)
+        self.last_message_time_label.bind('<Button-1>', self._on_click)
         
     def _on_click(self, event):
         """Handle click event."""

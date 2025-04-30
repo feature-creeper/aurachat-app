@@ -47,19 +47,31 @@ class ChatsView:
         if hasattr(self, 'back_command'):
             self.back_command()
         
+    def on_generate(self):
+        """Handle generate button click."""
+        if hasattr(self, 'generate_command'):
+            self.generate_command()
+        
+    def on_sync(self):
+        """Handle sync button click."""
+        if hasattr(self, 'sync_command'):
+            self.sync_command()
+        
     def pack(self, **kwargs):
         """Pack the view into its parent."""
         self.frame.pack(**kwargs)
         
-    def set_selected_chat(self, chat_info):
-        """Set the selected chat to display."""
+    def set_selected_chat(self, chat_info: dict):
+        """Set the selected chat information."""
         # Clear any existing selected chat
         for widget in self.selected_chat_frame.winfo_children():
             widget.destroy()
             
-        # Create and show the selected chat cell
-        self.selected_chat = SelectedChatCellView(self.selected_chat_frame, chat_info)
-        self.selected_chat.pack()
+        # Create and show the new selected chat cell
+        self.selected_chat_cell = SelectedChatCellView(self.selected_chat_frame, chat_info)
+        self.selected_chat_cell.set_generate_command(self.on_generate)
+        self.selected_chat_cell.set_sync_command(self.on_sync)
+        self.selected_chat_cell.pack()
         
     def add_chat(self, chat_info, click_command):
         """Add a chat to the display."""
@@ -74,4 +86,12 @@ class ChatsView:
             
     def set_back_command(self, command):
         """Set the command for the back action."""
-        self.back_command = command 
+        self.back_command = command
+        
+    def set_generate_command(self, command):
+        """Set the command for the generate action."""
+        self.generate_command = command
+        
+    def set_sync_command(self, command):
+        """Set the command for the sync action."""
+        self.sync_command = command 

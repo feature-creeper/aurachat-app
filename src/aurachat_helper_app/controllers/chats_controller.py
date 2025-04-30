@@ -1,6 +1,11 @@
 from views.chats_view import ChatsView
 from aurachat_helper_app.services.chat_service import ChatService
+from aurachat_helper_app.services.message_service import MessageService
+from aurachat_helper_app.models.chat import Chat
+from aurachat_helper_app.api.aurachat_webportal_client import AuraChatWebPortalClient
 import tkinter as tk
+from datetime import datetime
+from typing import List
 
 class ChatsController:
     """Controller class for managing chats."""
@@ -11,51 +16,111 @@ class ChatsController:
         self.accounts_controller = accounts_controller
         self.account_id = account_id
         self.view = ChatsView(parent)
-        self.chats = []
+        self.chats: List[Chat] = []
         self.selected_chat = None
         self.chat_service = ChatService()
+        self.message_service = MessageService()
+        self.webportal_client = AuraChatWebPortalClient()
         
-        # Set up back button
+        # Set up commands
         self.view.set_back_command(self.handle_back)
+        self.view.set_generate_command(self.handle_generate)
+        self.view.set_sync_command(self.handle_sync)
         
-    def handle_chat_click(self, chat_info):
+    def format_time(self, iso_time: str) -> str:
+        """
+        Convert ISO 8601 timestamp to readable format.
+        
+        Args:
+            iso_time: ISO 8601 timestamp string
+            
+        Returns:
+            Formatted time string (e.g., "Feb 3 12:34 PM")
+        """
+        if not iso_time:
+            return ''
+        try:
+            dt = datetime.fromisoformat(iso_time.replace('Z', '+00:00'))
+            return dt.strftime('%b %d %I:%M %p')
+        except ValueError:
+            return iso_time
+        
+    def get_display_name(self, chat: Chat) -> str:
+        """
+        Get the display name for a chat with fallbacks.
+        
+        Args:
+            chat: The chat object
+            
+        Returns:
+            The best available display name
+        """
+        if chat.fan.display_name:
+            return chat.fan.display_name
+        if chat.fan.name:
+            return chat.fan.name
+        if chat.fan.username:
+            return chat.fan.username
+        return "Unknown User"
+        
+    def handle_chat_click(self, chat: Chat):
         """Handle chat cell click event."""
-        self.selected_chat = chat_info
-        self.view.set_selected_chat(chat_info)
+        self.selected_chat = chat
+        
+        # Format display info
+        display_info = {
+            'display_name': self.get_display_name(chat),
+            'last_message': chat.last_message.text,
+            'last_message_time': self.format_time(chat.last_message.created_at)
+        }
+        self.view.set_selected_chat(display_info)
+        
+        # Get most recent message text
+        recent_message = self.message_service.get_most_recent_message_text(self.account_id, str(chat.fan.id))
+        print("Most Recent Message:", recent_message)
+        
+    def handle_sync(self):
+        """Handle sync button click."""
+        if self.selected_chat:
+            response = self.webportal_client.sync_messages(self.account_id, str(self.selected_chat.fan.id))
+            if response:
+                print("Sync successful:", response)
+            else:
+                print("Sync failed")
+                
+    def handle_generate(self):
+        """Handle generate button click."""
+        if self.selected_chat:
+            print("Generate clicked for chat:", self.selected_chat.fan.id)
         
     def handle_back(self):
         """Handle back button click."""
         self.view.frame.pack_forget()  # Hide chats view
         self.accounts_controller.pack(expand=True, fill=tk.BOTH)  # Show accounts view
         
-    def add_chat(self, chat_info):
+    def add_chat(self, chat: Chat):
         """Add a chat to the list and display."""
-        self.chats.append(chat_info)
-        # Format chat info for display with safe access to nested fields
-        fan = chat_info.get('fan') or {}
-        last_message = chat_info.get('lastMessage') or {}
+        self.chats.append(chat)
         
-        # Clean HTML from last message if present
-        last_message_text = last_message.get('text', '')
-        if last_message_text.startswith('<p>') and last_message_text.endswith('</p>'):
-            last_message_text = last_message_text[3:-4]  # Remove <p> and </p>
-        
+        # Format display info
         display_info = {
-            'display_name': fan.get('name', '') if fan else '',
-            'last_message': last_message_text
+            'display_name': self.get_display_name(chat),
+            'last_message': chat.last_message.text,
+            'last_message_time': self.format_time(chat.last_message.created_at)
         }
-        self.view.add_chat(display_info, lambda: self.handle_chat_click(chat_info))
+        self.view.add_chat(display_info, lambda: self.handle_chat_click(chat))
             
     def pack(self, **kwargs):
         """Pack the view into its parent and fetch chats."""
+        # First pack the view
         self.view.pack(**kwargs)
-        # Fetch and display chats
-        chats_data = self.chat_service.get_chats_for_account(self.account_id)
-        if chats_data:
-            # Clear existing chats
-            self.chats = []
-            for widget in self.view.chats_frame.winfo_children():
-                widget.destroy()
-            # Add new chats
-            for chat in chats_data:
+        
+        # Clear existing chats
+        self.chats = []
+        self.view.clear_chats()
+        
+        # Fetch and display new chats
+        chats = self.chat_service.get_chats_for_account(self.account_id)
+        if chats:
+            for chat in chats:
                 self.add_chat(chat) 

@@ -32,8 +32,30 @@ class OnlyFansAPIClient:
             response = requests.get(url, headers=self.headers)
             response.raise_for_status()  # Raise exception for bad status codes
             response_data = response.json()
-            print("API Response:", response_data)  # Print the response
             return response_data
         except requests.exceptions.RequestException as e:
             print(f"Error fetching chats: {e}")
+            return None
+            
+    def get_chat_messages(self, account_id: str, chat_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Fetch messages for a specific chat.
+        
+        Args:
+            account_id: The ID of the OnlyFans account
+            chat_id: The ID of the chat
+            
+        Returns:
+            Dict containing the messages data or None if the request failed
+        """
+        try:
+            url = f"{self.base_url}/{account_id}/chats/{chat_id}/messages"
+            print("URL:", url)
+            response = requests.get(url, headers=self.headers)
+            response.raise_for_status()  # Raise exception for bad status codes
+            response_data = response.json()
+            print("API Response:", response_data)  # Print the response
+            return response_data
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching chat messages: {e}")
             return None

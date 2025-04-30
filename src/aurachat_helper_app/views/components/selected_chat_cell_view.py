@@ -16,14 +16,14 @@ class SelectedChatCellView:
         
         # Username with larger font
         tk.Label(container, 
-                text=chat_info['username'], 
+                text=chat_info['display_name'], 
                 font=('Helvetica', 12, 'bold'),
                 bg='#2b2b2b',
                 fg='white').pack(side=tk.LEFT, padx=5)
         
-        # Client message section
+        # Add message label
         tk.Label(self.frame, 
-                text="Client message", 
+                text=chat_info.get('last_message', 'No messages'), 
                 font=('Helvetica', 10),
                 bg='#2b2b2b',
                 fg='white').pack(anchor=tk.W, padx=10, pady=(10, 5))
@@ -43,6 +43,20 @@ class SelectedChatCellView:
         # Action container
         action_frame = tk.Frame(self.frame, bg='#2b2b2b')
         action_frame.pack(fill=tk.X, padx=10, pady=(0, 10))
+        
+        # Sync action (grey)
+        self.sync_frame = tk.Frame(action_frame, bg='#808080')
+        self.sync_frame.pack(side=tk.LEFT, padx=5)
+        self.sync_label = tk.Label(self.sync_frame,
+                                 text="Sync",
+                                 bg='#808080',
+                                 fg='white',
+                                 font=('Helvetica', 10),
+                                 padx=10,
+                                 pady=5)
+        self.sync_label.pack()
+        self.sync_frame.bind('<Button-1>', lambda e: self._on_sync_click())
+        self.sync_label.bind('<Button-1>', lambda e: self._on_sync_click())
         
         # Generate action (green)
         self.generate_frame = tk.Frame(action_frame, bg='#4CAF50')
@@ -86,6 +100,11 @@ class SelectedChatCellView:
         self.copy_frame.bind('<Button-1>', lambda e: self._on_copy_click())
         self.copy_label.bind('<Button-1>', lambda e: self._on_copy_click())
         
+    def _on_sync_click(self):
+        """Handle sync click."""
+        if hasattr(self, 'sync_command'):
+            self.sync_command()
+            
     def _on_generate_click(self):
         """Handle generate click."""
         if hasattr(self, 'generate_command'):
@@ -132,4 +151,8 @@ class SelectedChatCellView:
         
     def set_copy_command(self, command):
         """Set the command for the copy action."""
-        self.copy_command = command 
+        self.copy_command = command
+        
+    def set_sync_command(self, command):
+        """Set the command for the sync action."""
+        self.sync_command = command 
