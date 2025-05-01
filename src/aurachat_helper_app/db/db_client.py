@@ -54,19 +54,19 @@ class MongoDBClient:
         Returns:
             List of Message objects if found, None if no document exists
         """
-        document = await self.client['aurachat']['chats'].find_one({
+        document = await self.client['onlyfans']['chats'].find_one({
             'account': account,
             'chat_id': chat_id
         })
         
-        if not document:
+        if not document or 'messages' not in document:
             return None
             
         messages = []
-        for msg in document.get('messages', []):
+        for msg in document['messages']:
             messages.append(Message(
                 content=msg.get('content', ''),
-                timestamp=datetime.fromisoformat(msg.get('timestamp')),
+                timestamp=msg.get('timestamp', ''),
                 sender=msg.get('sender', '')
             ))
             

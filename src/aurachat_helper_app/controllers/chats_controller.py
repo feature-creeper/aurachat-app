@@ -88,6 +88,28 @@ class ChatsController:
         print(f"Setting selected chat with display info: {display_info}")
         self.view.set_selected_chat(display_info)
         
+        # Schedule database call to run after current event is processed
+        self.parent.after_idle(self._fetch_messages, chat)
+        
+    def _fetch_messages(self, chat: Chat):
+        """Fetch messages from database and update display."""
+        async def fetch():
+            messages = await self.db_client.get_chat_messages(self.account_id, str(chat.fan.id))
+            if messages:
+                # Update the display with the most recent message
+                display_info = {
+                    'display_name': self.get_display_name(chat),
+                    'last_message': messages[0].content,
+                    'last_message_time': self.format_time(messages[0].timestamp)
+                }
+                self.view.set_selected_chat(display_info)
+                
+        # Create and run a new event loop
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(fetch())
+        loop.close()
+        
     def handle_sync(self):
         """Handle sync button click."""
         if self.selected_chat:
