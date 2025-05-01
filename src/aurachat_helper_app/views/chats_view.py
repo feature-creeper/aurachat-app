@@ -63,15 +63,15 @@ class ChatsView:
         
     def set_selected_chat(self, chat_info: dict):
         """Set the selected chat information."""
-        if not hasattr(self, 'selected_chat_cell'):
-            # Create the selected chat cell if it doesn't exist
-            self.selected_chat_cell = SelectedChatCellView(self.selected_chat_frame, chat_info)
-            self.selected_chat_cell.set_generate_command(self.on_generate)
-            self.selected_chat_cell.set_sync_command(self.on_sync)
-            self.selected_chat_cell.pack()
-        else:
-            # Update the existing cell
-            self.selected_chat_cell.update_message(chat_info.get('last_message', ''))
+        # Clear any existing selected chat
+        for widget in self.selected_chat_frame.winfo_children():
+            widget.destroy()
+            
+        # Create and show the new selected chat cell
+        self.selected_chat_cell = SelectedChatCellView(self.selected_chat_frame, chat_info)
+        self.selected_chat_cell.set_generate_command(self.on_generate)
+        self.selected_chat_cell.set_sync_command(self.on_sync)
+        self.selected_chat_cell.pack()
         
     def add_chat(self, chat_info, click_command):
         """Add a chat to the display."""

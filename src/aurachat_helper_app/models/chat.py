@@ -93,8 +93,6 @@ class Chat:
         fan_data = data if 'id' in data else data.get('fan', {}) or {}
         last_message_data = data.get('lastMessage', {}) or {}
         
-        # Debug logging
-        print("Raw fan data:", fan_data)
         
         # Create Fan object with default values
         fan = Fan(

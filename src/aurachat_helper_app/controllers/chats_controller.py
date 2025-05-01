@@ -76,6 +76,7 @@ class ChatsController:
         
     def handle_chat_click(self, chat: Chat):
         """Handle chat cell click event."""
+        print(f"Chat clicked - Fan ID: {chat.fan.id}, Display Name: {self.get_display_name(chat)}")
         self.selected_chat = chat
         
         # Format display info with default values first
@@ -84,6 +85,7 @@ class ChatsController:
             'last_message': '',  # Use empty string instead of None
             'last_message_time': self.format_time(chat.last_message.created_at)
         }
+        print(f"Setting selected chat with display info: {display_info}")
         self.view.set_selected_chat(display_info)
         
     def handle_sync(self):
@@ -109,6 +111,7 @@ class ChatsController:
         
     def add_chat(self, chat: Chat):
         """Add a chat to the list and display."""
+        print(f"Adding chat - Fan ID: {chat.fan.id}, Display Name: {self.get_display_name(chat)}")
         self.chats.append(chat)
         
         # Format display info
@@ -117,16 +120,19 @@ class ChatsController:
             'last_message': chat.last_message.text,
             'last_message_time': self.format_time(chat.last_message.created_at)
         }
+        print(f"Adding chat cell with display info: {display_info}")
         self.view.add_chat(display_info, lambda: self.handle_chat_click(chat))
             
     def fetch_and_display_chats(self):
         """Fetch and display chats for the current account."""
+        print("Fetching and displaying chats...")
         # Clear existing chats
         self.chats = []
         self.view.clear_chats()
         
         # Fetch and display new chats
         chats = self.chat_service.get_chats_for_account(self.account_id)
+        print(f"Found {len(chats) if chats else 0} chats")
         if chats:
             for chat in chats:
                 self.add_chat(chat)
