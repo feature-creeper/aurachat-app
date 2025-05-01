@@ -112,11 +112,14 @@ class ChatsController:
         """Fetch messages from database and update display."""
         messages = self.db_client.get_chat_messages(self.account_id, str(chat.fan.id))
         if messages:
-            # Update the display with the most recent message
+            # Get the last message from the fan
+            last_fan_message = self.message_service.get_last_fan_message(messages, str(chat.fan.id))
+            
+            # Update the display with the last fan message
             display_info = {
                 'display_name': self.get_display_name(chat),
-                'last_message': messages[0].content,
-                'last_message_time': self.format_time(messages[0].timestamp)
+                'last_message': last_fan_message.content if last_fan_message else 'No messages from fan',
+                'last_message_time': self.format_time(last_fan_message.timestamp) if last_fan_message else ''
             }
             self.view.set_selected_chat(display_info)
         else:
