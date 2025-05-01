@@ -3,9 +3,11 @@ from aurachat_helper_app.services.chat_service import ChatService
 from aurachat_helper_app.services.message_service import MessageService
 from aurachat_helper_app.models.chat import Chat
 from aurachat_helper_app.api.aurachat_webportal_client import AuraChatWebPortalClient
+from aurachat_helper_app.db.db_client import db_client
 import tkinter as tk
 from datetime import datetime
 from typing import List
+import asyncio
 
 class ChatsController:
     """Controller class for managing chats."""
@@ -21,6 +23,7 @@ class ChatsController:
         self.chat_service = ChatService()
         self.message_service = MessageService()
         self.webportal_client = AuraChatWebPortalClient()
+        self.db_client = db_client
         
         # Set up commands
         self.view.set_back_command(self.handle_back)
@@ -75,17 +78,13 @@ class ChatsController:
         """Handle chat cell click event."""
         self.selected_chat = chat
         
-        # Format display info
+        # Format display info with default values first
         display_info = {
             'display_name': self.get_display_name(chat),
-            'last_message': chat.last_message.text,
+            'last_message': '',  # Use empty string instead of None
             'last_message_time': self.format_time(chat.last_message.created_at)
         }
         self.view.set_selected_chat(display_info)
-        
-        # Get most recent message text
-        recent_message = self.message_service.get_most_recent_message_text(self.account_id, str(chat.fan.id))
-        print("Most Recent Message:", recent_message)
         
     def handle_sync(self):
         """Handle sync button click."""

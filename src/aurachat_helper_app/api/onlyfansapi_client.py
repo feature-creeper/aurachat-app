@@ -38,7 +38,6 @@ class OnlyFansAPIClient:
             )
             response.raise_for_status()
             data = response.json()
-            print("API Response:", data)
             return data
         except requests.exceptions.RequestException as e:
             print(f"Error getting chats: {e}")
@@ -61,7 +60,6 @@ class OnlyFansAPIClient:
             response = requests.get(url, headers=self.headers)
             response.raise_for_status()  # Raise exception for bad status codes
             response_data = response.json()
-            print("API Response:", response_data)  # Print the response
             return response_data
         except requests.exceptions.RequestException as e:
             print(f"Error fetching chat messages: {e}")

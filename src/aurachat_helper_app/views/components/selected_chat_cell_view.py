@@ -22,11 +22,12 @@ class SelectedChatCellView:
                 fg='white').pack(side=tk.LEFT, padx=5)
         
         # Add message label
-        tk.Label(self.frame, 
-                text=chat_info.get('last_message', 'No messages'), 
+        self.message_label = tk.Label(self.frame, 
+                text=chat_info.get('last_message', 'No messages found, please press Sync'), 
                 font=('Helvetica', 10),
                 bg='#2b2b2b',
-                fg='white').pack(anchor=tk.W, padx=10, pady=(10, 5))
+                fg='white')
+        self.message_label.pack(anchor=tk.W, padx=10, pady=(10, 5))
         
         # Text field for generated response
         self.response_text = tk.Text(self.frame, 
@@ -155,4 +156,8 @@ class SelectedChatCellView:
         
     def set_sync_command(self, command):
         """Set the command for the sync action."""
-        self.sync_command = command 
+        self.sync_command = command
+        
+    def update_message(self, message: str):
+        """Update the message text."""
+        self.message_label.config(text=message or 'No messages found, please press Sync') 
