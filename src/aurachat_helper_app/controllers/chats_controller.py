@@ -8,6 +8,18 @@ import tkinter as tk
 from datetime import datetime
 from typing import List
 import asyncio
+import threading
+
+# Global event loop
+_loop = None
+
+def get_event_loop():
+    """Get or create the global event loop."""
+    global _loop
+    if _loop is None:
+        _loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(_loop)
+    return _loop
 
 class ChatsController:
     """Controller class for managing chats."""
@@ -43,10 +55,15 @@ class ChatsController:
         if not iso_time:
             return ''
         try:
+            # If it's already a datetime object, use it directly
+            if isinstance(iso_time, datetime):
+                return iso_time.strftime('%b %d %I:%M %p')
+                
+            # Otherwise parse the string
             dt = datetime.fromisoformat(iso_time.replace('Z', '+00:00'))
             return dt.strftime('%b %d %I:%M %p')
-        except ValueError:
-            return iso_time
+        except (ValueError, TypeError):
+            return iso_time  # Return the original string if parsing fails
         
     def get_display_name(self, chat: Chat) -> str:
         """
@@ -93,31 +110,31 @@ class ChatsController:
         
     def _fetch_messages(self, chat: Chat):
         """Fetch messages from database and update display."""
-        async def fetch():
-            messages = await self.db_client.get_chat_messages(self.account_id, str(chat.fan.id))
-            if messages:
-                # Update the display with the most recent message
-                display_info = {
-                    'display_name': self.get_display_name(chat),
-                    'last_message': messages[0].content,
-                    'last_message_time': self.format_time(messages[0].timestamp)
-                }
-                self.view.set_selected_chat(display_info)
-                
-        # Create and run a new event loop
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(fetch())
-        loop.close()
+        messages = self.db_client.get_chat_messages(self.account_id, str(chat.fan.id))
+        if messages:
+            # Update the display with the most recent message
+            display_info = {
+                'display_name': self.get_display_name(chat),
+                'last_message': messages[0].content,
+                'last_message_time': self.format_time(messages[0].timestamp)
+            }
+            self.view.set_selected_chat(display_info)
+        else:
+            # Show message to sync when no messages found
+            display_info = {
+                'display_name': self.get_display_name(chat),
+                'last_message': 'Please press Sync',
+                'last_message_time': ''
+            }
+            self.view.set_selected_chat(display_info)
         
     def handle_sync(self):
         """Handle sync button click."""
         if self.selected_chat:
             response = self.webportal_client.sync_messages(self.account_id, str(self.selected_chat.fan.id))
             if response:
-                print("Sync successful:", response)
-                # Refresh the chat list after sync
-                self.fetch_and_display_chats()
+                # Fetch and display messages for the selected chat
+                self._fetch_messages(self.selected_chat)
             else:
                 print("Sync failed")
                 

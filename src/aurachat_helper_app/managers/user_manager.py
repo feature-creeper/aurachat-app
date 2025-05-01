@@ -1,7 +1,6 @@
 from typing import Optional, Dict, Any
 from ..db.db_client import db_client
 from ..models.user import User
-import asyncio
 
 class UserManager:
     """Manager class for handling user authentication state and operations."""
@@ -12,7 +11,7 @@ class UserManager:
         
     def sign_in(self, email: str) -> bool:
         """Check if a user exists with the given email and set the current user."""
-        user_data = asyncio.run(db_client.get_user_by_email(email))
+        user_data = db_client.get_user_by_email(email)
         if user_data:
             self._current_user = User.from_dict(user_data)
             return True

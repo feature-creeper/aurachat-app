@@ -25,18 +25,23 @@ class SignInController:
             
         email = self.view.get_email()
         print(f"SignInController: Attempting sign in with email: {email}")
-        success = self.user_manager.sign_in(email)
-        
-        if not success:
-            print("SignInController: Sign in failed - user not found")
-            messagebox.showerror("Sign In Error", "User not found")
-            return
-        
-        print("SignInController: Sign in successful, showing accounts view")
-        # Show OnlyFans accounts view
-        self.view.frame.pack_forget()  # Hide sign-in view
-        self.accounts_controller = OnlyFansAccountsController(self.parent, self.user_manager)
-        self.accounts_controller.pack(expand=True, fill=tk.BOTH)
+        try:
+            success = self.user_manager.sign_in(email)
+            print(f"SignInController: Sign in result: {success}")
+            
+            if not success:
+                print("SignInController: Sign in failed - user not found")
+                messagebox.showerror("Sign In Error", "User not found")
+                return
+            
+            print("SignInController: Sign in successful, showing accounts view")
+            # Show OnlyFans accounts view
+            self.view.frame.pack_forget()  # Hide sign-in view
+            self.accounts_controller = OnlyFansAccountsController(self.parent, self.user_manager)
+            self.accounts_controller.pack(expand=True, fill=tk.BOTH)
+        except Exception as e:
+            print(f"SignInController: Error during sign in: {e}")
+            messagebox.showerror("Sign In Error", f"An error occurred: {str(e)}")
         
     def pack(self, **kwargs):
         """Pack the sign-in view into its parent."""
