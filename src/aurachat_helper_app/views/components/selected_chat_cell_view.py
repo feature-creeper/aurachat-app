@@ -160,4 +160,11 @@ class SelectedChatCellView:
         
     def update_message(self, message: str):
         """Update the message text."""
-        self.message_label.config(text=message or 'No messages found, please press Sync') 
+        self.message_label.config(text=message or 'No messages found, please press Sync')
+        
+    def set_response_text(self, text: str):
+        """Set the response text in the text widget."""
+        self.response_text.config(state='normal')
+        self.response_text.delete('1.0', tk.END)
+        self.response_text.insert('1.0', text)
+        self.response_text.config(state='disabled') 

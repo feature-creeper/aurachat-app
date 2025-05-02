@@ -94,4 +94,9 @@ class ChatsView:
         
     def set_sync_command(self, command):
         """Set the command for the sync action."""
-        self.sync_command = command 
+        self.sync_command = command
+        
+    def set_response_text(self, text: str):
+        """Set the response text in the selected chat cell."""
+        if self.selected_chat_cell:
+            self.selected_chat_cell.set_response_text(text) 

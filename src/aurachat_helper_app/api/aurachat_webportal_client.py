@@ -1,6 +1,6 @@
 """Client for interacting with the AuraChat web portal API."""
 import requests
-from typing import Optional
+from typing import Optional, Dict, Any
 
 class AuraChatWebPortalClient:
     """Client for interacting with the AuraChat web portal API."""
@@ -28,4 +28,23 @@ class AuraChatWebPortalClient:
             return response.json()
         except requests.exceptions.RequestException as e:
             print(f"Error syncing messages: {e}")
+            return None 
+
+    def generate_response(self, account_id: str, chat_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Generate a response for a chat.
+        
+        Args:
+            account_id: The ID of the OnlyFans account
+            chat_id: The ID of the chat
+            
+        Returns:
+            The JSON response from the server, or None if the request fails
+        """
+        try:
+            response = requests.post(f"{self.base_url}/api/generate-response/{account_id}/{chat_id}")
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error generating response: {e}")
             return None 

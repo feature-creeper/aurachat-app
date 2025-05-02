@@ -1,6 +1,7 @@
 from views.chats_view import ChatsView
 from aurachat_helper_app.services.chat_service import ChatService
 from aurachat_helper_app.services.message_service import MessageService
+from aurachat_helper_app.services.generate_message_service import GenerateMessageService
 from aurachat_helper_app.models.chat import Chat
 from aurachat_helper_app.api.aurachat_webportal_client import AuraChatWebPortalClient
 from aurachat_helper_app.db.db_client import db_client
@@ -34,6 +35,7 @@ class ChatsController:
         self.selected_chat = None
         self.chat_service = ChatService()
         self.message_service = MessageService()
+        self.generate_message_service = GenerateMessageService()
         self.webportal_client = AuraChatWebPortalClient()
         self.db_client = db_client
         
@@ -145,6 +147,12 @@ class ChatsController:
         """Handle generate button click."""
         if self.selected_chat:
             print("Generate clicked for chat:", self.selected_chat.fan.id)
+            response = self.generate_message_service.generate_response(self.account_id, str(self.selected_chat.fan.id))
+            if response != 'Generate response error':
+                print("Generated response:", response)
+                self.view.set_response_text(response)
+            else:
+                print("Failed to generate response")
         
     def handle_back(self):
         """Handle back button click."""
