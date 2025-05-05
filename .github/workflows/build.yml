@@ -32,7 +32,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: aurachat_helper-windows
-          path: src/dist/main.exe
+          path: dist/main.exe  # Path to the built artifact
 
   build-mac:
     runs-on: macos-latest
@@ -60,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: aurachat_helper-mac
-          path: src/dist/main
+          path: dist/main  # Path to the built artifact
   
   release:
     needs: [build-windows, build-mac]
@@ -82,11 +82,10 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          name: "Aurachat Helper v0.1.2"
-          tag_name: "v0.1.2"
+          name: "Aurachat Helper v0.1.3"  # Release title
+          tag_name: "v0.1.3"  # Release tag name
           files: |
-            dist/main.exe
-            dist/main
+            dist/main.exe  # Windows artifact
+            dist/main      # macOS artifact
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Token for authenticating the release
