@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: aurachat_helper-windows
-          path: dist/main.exe  # Ensure this path is correct
+          path: src/dist/main.exe  # Ensure this path is correct
 
   build-mac:
     runs-on: macos-latest
