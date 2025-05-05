@@ -8,6 +8,9 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: src
 
     steps:
       - uses: actions/checkout@v3
@@ -18,21 +21,20 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        working-directory: ./src
         run: |
           pip install pyinstaller
-          pip install -r ../requirements.txt
+          pip install -r ../requirements.txt  # Since requirements.txt is one level up
 
       - name: Build Windows Executable
         run: |
-          pyinstaller --onefile --windowed aurachat_helper_app/main.py
-          dir dist  # Use dir for Windows to check contents
+          pyinstaller --onefile --windowed aurachat_helper_app/main.py  # Correct relative path from src/
+          dir dist  # Check if the binary is in dist directory
 
       - name: Upload Windows Build
         uses: actions/upload-artifact@v4
         with:
           name: aurachat_helper-windows
-          path: dist/main.exe  # Ensure this path is correct
+          path: src/dist/main.exe  # Path to the .exe after the build
 
   build-mac:
     runs-on: macos-latest
