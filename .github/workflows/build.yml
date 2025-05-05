@@ -10,7 +10,7 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        working-directory: aurachat_helper/src
+        working-directory: src
 
     steps:
       - uses: actions/checkout@v3
@@ -32,13 +32,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: aurachat_helper-windows
-          path: aurachat_helper/src/dist/main.exe
+          path: src/dist/main.exe
 
   build-mac:
     runs-on: macos-latest
     defaults:
       run:
-        working-directory: aurachat_helper/src
+        working-directory: src
 
     steps:
       - uses: actions/checkout@v3
@@ -60,4 +60,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: aurachat_helper-mac
-          path: aurachat_helper/src/dist/main
+          path: src/dist/main
