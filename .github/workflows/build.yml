@@ -28,14 +28,14 @@ jobs:
       - name: Build Windows Executable
         run: pyinstaller --onefile --windowed aurachat_helper_app/main.py
 
-      - name: List files in dist/
-        run: dir dist  # Use 'ls dist' for macOS/Linux to check output
+      - name: List dist directory (Debugging step)
+        run: dir src/dist  # This will show the contents of the dist directory
 
       - name: Upload Windows Build
         uses: actions/upload-artifact@v4
         with:
           name: aurachat_helper-windows
-          path: dist/main.exe  # Ensure the path is correct, based on the output
+          path: src/dist/main.exe
 
   build-mac:
     runs-on: macos-latest
@@ -59,15 +59,15 @@ jobs:
       - name: Build macOS Binary
         run: pyinstaller --onefile --windowed aurachat_helper_app/main.py
 
-      - name: List files in dist/
-        run: ls dist  # macOS/Linux command to check output
+      - name: List dist directory (Debugging step)
+        run: ls -al src/dist  # This will show the contents of the dist directory
 
       - name: Upload macOS Build
         uses: actions/upload-artifact@v4
         with:
           name: aurachat_helper-mac
-          path: dist/main  # Ensure the path is correct, based on the output
-
+          path: src/dist/main
+  
   release:
     needs: [build-windows, build-mac]
     runs-on: ubuntu-latest
@@ -76,25 +76,25 @@ jobs:
       - name: Download Windows Artifact
         uses: actions/download-artifact@v4
         with:
-          name: aurachat_helper-windows
+          name: aurachat_helper-windows  # Ensure this matches the upload name
           path: ./dist/
 
       - name: Download macOS Artifact
         uses: actions/download-artifact@v4
         with:
-          name: aurachat_helper-mac
+          name: aurachat_helper-mac  # Ensure this matches the upload name
           path: ./dist/
 
-      - name: List files in dist/ for release
-        run: ls ./dist  # Check that the files are available
+      - name: List downloaded artifacts (Debugging step)
+        run: ls -al ./dist  # Ensure the artifacts were downloaded correctly
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          name: "Aurachat Helper v0.1.2"  # Release title
-          tag_name: "v0.1.2"  # Release tag name
+          name: "Aurachat Helper v0.1.2"
+          tag_name: "v0.1.2"
           files: |
-            dist/main.exe  # Windows artifact
-            dist/main      # macOS artifact
+            dist/main.exe
+            dist/main
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Token for authenticating the release
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
