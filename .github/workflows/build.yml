@@ -61,3 +61,32 @@ jobs:
         with:
           name: aurachat_helper-mac
           path: src/dist/main
+  
+  release:
+    needs: [build-windows, build-mac]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: aurachat_helper-windows
+          path: ./dist/
+
+      - name: Download macOS Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: aurachat_helper-mac
+          path: ./dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "Aurachat Helper v1.0"
+          tag_name: "v0.1.0"
+          files: |
+            dist/main.exe
+            dist/main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
