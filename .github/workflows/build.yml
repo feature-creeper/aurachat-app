@@ -82,7 +82,9 @@ jobs:
         with:
           name: aurachat_helper-mac
           path: ./dist/
-
+      - name: Check contents of dist folder
+        run: |
+          ls -l ./dist  # Check if the binary is downloaded correctly
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
