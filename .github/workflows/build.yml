@@ -26,16 +26,16 @@ jobs:
           pip install -r ../requirements.txt
 
       - name: Build Windows Executable
-        run: pyinstaller --onefile --windowed aurachat_helper_app/main.py
-
-      - name: List dist directory (Debugging step)
-        run: ls -al dist  # Check the dist directory after build
+        run: |
+          pyinstaller --onefile --windowed aurachat_helper_app/main.py
+          ls -al dist  # Debugging step to check if dist directory exists
+          ls -al src/dist  # Debugging step for alternate path
 
       - name: Upload Windows Build
         uses: actions/upload-artifact@v4
         with:
           name: aurachat_helper-windows
-          path: dist/main.exe  # Path to the built executable
+          path: src/dist/main.exe  # Make sure the path is correct
 
   build-mac:
     runs-on: macos-latest
@@ -59,13 +59,14 @@ jobs:
       - name: Build macOS Binary
         run: |
           pyinstaller --onefile --windowed aurachat_helper_app/main.py
-          ls -al dist  # List files in dist folder after build
+          ls -al dist  # Debugging step to check if dist directory exists
+          ls -al src/dist  # Debugging step for alternate path
 
       - name: Upload macOS Build
         uses: actions/upload-artifact@v4
         with:
           name: aurachat_helper-mac
-          path: dist/main  # Path to the built binary
+          path: src/dist/main  # Make sure the path is correct
 
   release:
     needs: [build-windows, build-mac]
