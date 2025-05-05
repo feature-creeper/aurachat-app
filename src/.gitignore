@@ -1,0 +1,11 @@
+# PyInstaller build output
+build/
+dist/
+
+# Python bytecode files
+*.pyc
+*.pyo
+__pycache__/
+
+# Virtual environment directory (if you have one)
+venv/

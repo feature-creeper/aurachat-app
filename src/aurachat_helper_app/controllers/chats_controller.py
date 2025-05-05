@@ -1,4 +1,6 @@
-from views.chats_view import ChatsView
+from aurachat_helper_app.views.chats_view import ChatsView
+from aurachat_helper_app.views.components.chat_cell_view import ChatCellView
+from aurachat_helper_app.views.components.selected_chat_cell_view import SelectedChatCellView
 from aurachat_helper_app.services.chat_service import ChatService
 from aurachat_helper_app.services.message_service import MessageService
 from aurachat_helper_app.services.generate_message_service import GenerateMessageService

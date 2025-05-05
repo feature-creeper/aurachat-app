@@ -1,5 +1,6 @@
-from views.onlyfans_accounts_view import OnlyFansAccountsView
-from controllers.chats_controller import ChatsController
+from aurachat_helper_app.views.onlyfans_accounts_view import OnlyFansAccountsView
+from aurachat_helper_app.views.components.onlyfans_account_cell_view import OnlyFansAccountCellView
+from aurachat_helper_app.controllers.chats_controller import ChatsController
 import tkinter.messagebox as messagebox
 import tkinter as tk
 
