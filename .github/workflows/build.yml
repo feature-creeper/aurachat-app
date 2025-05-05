@@ -89,7 +89,7 @@ jobs:
           name: "Aurachat Helper"
           tag_name: "v0.1.3"
           files: |
-            dist/main.exe
-            dist/main
+            dist/aurachat_helper-windows/main.exe
+            dist/aurachat_helper-mac/main
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
