@@ -1,0 +1,63 @@
+name: Build Tkinter App
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: aurachat_helper/src
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller
+          pip install -r ../../requirements.txt
+
+      - name: Build Windows Executable
+        run: pyinstaller --onefile --windowed aurachat_helper_app/main.py
+
+      - name: Upload Windows Build
+        uses: actions/upload-artifact@v3
+        with:
+          name: aurachat_helper-windows
+          path: aurachat_helper/src/dist/main.exe
+
+  build-mac:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: aurachat_helper/src
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller
+          pip install -r ../../requirements.txt
+
+      - name: Build macOS Binary
+        run: pyinstaller --onefile --windowed aurachat_helper_app/main.py
+
+      - name: Upload macOS Build
+        uses: actions/upload-artifact@v3
+        with:
+          name: aurachat_helper-mac
+          path: aurachat_helper/src/dist/main

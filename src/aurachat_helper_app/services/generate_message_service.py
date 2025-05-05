@@ -1,5 +1,6 @@
 from typing import Optional, Dict, Any
 from aurachat_helper_app.api.aurachat_webportal_client import AuraChatWebPortalClient
+import re
 
 class GenerateMessageService:
     """Service for handling message generation operations."""
@@ -22,8 +23,10 @@ class GenerateMessageService:
         try:
             response = self.webportal_client.generate_response(account_id, chat_id)
             print("Generate response:", response)
-            if response and 'content' in response:
-                return response['content']
+            if response and 'text' in response:
+                # Remove HTML tags from content
+                clean_content = re.sub(r'<[^>]+>', '', response['text'])
+                return clean_content
             return 'Generate response error'
         except Exception as e:
             print(f"Error generating message: {e}")

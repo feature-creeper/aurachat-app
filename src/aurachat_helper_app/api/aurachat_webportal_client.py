@@ -21,7 +21,7 @@ class AuraChatWebPortalClient:
             Response data from the API or None if the request failed
         """
         try:
-            response = requests.get(
+            response = requests.post(
                 f"{self.base_url}/api/sync-messages/{account_id}/{chat_id}"
             )
             response.raise_for_status()
