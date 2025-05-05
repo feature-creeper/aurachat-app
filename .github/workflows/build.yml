@@ -89,9 +89,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: "Aurachat Helper"
-          tag_name: "v0.1.5"
-          files: |
-            dist/aurachat_helper-windows/main.exe
-            dist/aurachat_helper-mac/main
+          tag_name: "v0.1.6"
+          files: ./dist/main.exe,./dist/main
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
