@@ -1,5 +1,5 @@
 altgraph==0.17.4
--e git+https://github.com/feature-creeper/aurachat-app.git@643f85d33a538b315c376580ebac83a3af5c2f5a#egg=aurachat_helper
+-e git+https://${GITHUB_TOKEN}@github.com/feature-creeper/aurachat-app.git@643f85d33a538b315c376580ebac83a3af5c2f5a#egg=aurachat_helper
 certifi==2025.1.31
 charset-normalizer==3.4.1
 dnspython==2.7.0
