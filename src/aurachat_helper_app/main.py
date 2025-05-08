@@ -19,8 +19,6 @@ def main():
         # Set environment
         environment=os.getenv("ENVIRONMENT", "development")
     )
-
-    division_by_zero = 1 / 0
     
     root_controller = RootController()
     root_controller.start()

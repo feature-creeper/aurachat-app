@@ -93,7 +93,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: "Aurachat Helper"
-          tag_name: "v0.1.7"
+          tag_name: "v0.1.8"
           files: ./dist/main.exe,./dist/main
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

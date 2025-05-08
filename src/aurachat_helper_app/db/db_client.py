@@ -38,6 +38,27 @@ class MongoDBClient:
             print(f"MongoDBClient: Error looking up user: {e}")
             raise  # Re-raise the exception to see the full traceback
 
+    def get_account_by_id(self, account: str) -> Optional[Dict[str, Any]]:
+        """
+        Get an account document from the 'accounts' collection in 'onlyfans' database.
+        
+        Args:
+            account: The account identifier to look up
+            
+        Returns:
+            The account document if found, None if no document exists
+        """
+        try:
+            print(f"MongoDBClient: Looking up account: {account}")
+            db = self.client['onlyfans']
+            accounts = db['accounts']
+            account_doc = accounts.find_one({"account": account})
+            print(f"MongoDBClient: Account query result: {account_doc}")
+            return account_doc
+        except Exception as e:
+            print(f"MongoDBClient: Error looking up account: {e}")
+            raise
+
     def close(self):
         """Close the MongoDB connection"""
         print("MongoDBClient: Closing connection...")
