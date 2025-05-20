@@ -7,11 +7,15 @@ from aurachat_helper_app.services.generate_message_service import GenerateMessag
 from aurachat_helper_app.models.chat import Chat
 from aurachat_helper_app.api.aurachat_webportal_client import AuraChatWebPortalClient
 from aurachat_helper_app.db.db_client import db_client
+from aurachat_helper_app.utils.logger import get_logger
 import tkinter as tk
+import tkinter.messagebox as messagebox
 from datetime import datetime
 from typing import List
 import asyncio
 import threading
+
+logger = get_logger(__name__)
 
 # Global event loop
 _loop = None
@@ -29,23 +33,35 @@ class ChatsController:
     
     def __init__(self, parent, accounts_controller, account_id: str):
         """Initialize the chats controller."""
-        self.parent = parent
-        self.accounts_controller = accounts_controller
-        self.account_id = account_id
-        self.view = ChatsView(parent)
-        self.chats: List[Chat] = []
-        self.selected_chat = None
-        self.chat_service = ChatService()
-        self.message_service = MessageService()
-        self.generate_message_service = GenerateMessageService()
-        self.webportal_client = AuraChatWebPortalClient()
-        self.db_client = db_client
-        
-        # Set up commands
-        self.view.set_back_command(self.handle_back)
-        self.view.set_generate_command(self.handle_generate)
-        self.view.set_sync_command(self.handle_sync)
-        
+        try:
+            logger.info(f"Initializing chats controller for account: {account_id}")
+            self.parent = parent
+            self.accounts_controller = accounts_controller
+            self.account_id = account_id
+            
+            logger.debug("Creating ChatsView")
+            self.view = ChatsView(parent)
+            self.chats: List[Chat] = []
+            self.selected_chat = None
+            
+            logger.debug("Initializing services")
+            self.chat_service = ChatService()
+            self.message_service = MessageService()
+            self.generate_message_service = GenerateMessageService()
+            self.webportal_client = AuraChatWebPortalClient()
+            self.db_client = db_client
+            
+            # Set up commands
+            logger.debug("Setting up view commands")
+            self.view.set_back_command(self.handle_back)
+            self.view.set_generate_command(self.handle_generate)
+            self.view.set_sync_command(self.handle_sync)
+            
+        except Exception as e:
+            logger.exception("Error initializing ChatsController")
+            messagebox.showerror("Error", f"Failed to initialize chats view: {str(e)}")
+            raise
+
     def format_time(self, iso_time: str) -> str:
         """
         Convert ISO 8601 timestamp to readable format.
@@ -178,22 +194,41 @@ class ChatsController:
             
     def fetch_and_display_chats(self):
         """Fetch and display chats for the current account."""
-        print("Fetching and displaying chats...")
-        # Clear existing chats
-        self.chats = []
-        self.view.clear_chats()
-        
-        # Fetch and display new chats
-        chats = self.chat_service.get_chats_for_account(self.account_id)
-        print(f"Found {len(chats) if chats else 0} chats")
-        if chats:
-            for chat in chats:
-                self.add_chat(chat)
+        try:
+            logger.info(f"Fetching chats for account: {self.account_id}")
+            # Clear existing chats
+            self.chats = []
+            self.view.clear_chats()
+            
+            # Fetch and display new chats
+            chats = self.chat_service.get_chats_for_account(self.account_id)
+            logger.info(f"Found {len(chats) if chats else 0} chats")
+            
+            if chats:
+                for chat in chats:
+                    try:
+                        self.add_chat(chat)
+                    except Exception as e:
+                        logger.error(f"Error adding chat {chat.fan.id}: {str(e)}")
+            else:
+                logger.warning("No chats found for account")
+                
+        except Exception as e:
+            logger.exception("Error fetching and displaying chats")
+            messagebox.showerror("Error", f"Failed to load chats: {str(e)}")
                 
     def pack(self, **kwargs):
         """Pack the view into its parent and fetch chats."""
-        # First pack the view
-        self.view.pack(**kwargs)
-        
-        # Fetch and display chats
-        self.fetch_and_display_chats() 
+        try:
+            logger.debug("Packing chats view")
+            # First pack the view
+            self.view.pack(**kwargs)
+            
+            # Fetch and display chats
+            logger.debug("Starting chat fetch")
+            self.fetch_and_display_chats()
+        except Exception as e:
+            logger.exception("Error in pack method")
+            messagebox.showerror("Error", f"An error occurred while loading the chat view: {str(e)}")
+            # Try to recover by going back to accounts view
+            self.handle_back() 
