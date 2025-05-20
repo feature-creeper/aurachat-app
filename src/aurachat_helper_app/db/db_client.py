@@ -6,16 +6,23 @@ import sys
 import ssl
 from datetime import datetime
 from ..models.message import Message
+from ..env_config import MONGODB_URI
 
+# Load .env file if it exists (for development)
 load_dotenv()
 
 class MongoDBClient:
     def __init__(self):
         print("MongoDBClient: Initializing connection...")
         try:
+            # Use env_config value first, fallback to environment variable
+            mongodb_uri = MONGODB_URI or os.getenv("MONGODB_URI")
+            if not mongodb_uri:
+                raise ValueError("MONGODB_URI not found in configuration or environment variables")
+
             # Add serverSelectionTimeoutMS to prevent hanging and disable SSL verification for development
             self.client = MongoClient(
-                os.getenv("MONGODB_URI"),
+                mongodb_uri,
                 serverSelectionTimeoutMS=5000,  # 5 second timeout
                 tlsAllowInvalidCertificates=True  # Disable SSL verification for development
             )

@@ -27,14 +27,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      - name: Build Windows Executable
-        run: |
-          pyinstaller --onefile --windowed aurachat_helper_app/main.py --name aurachat_helper
-          dir dist  # Check if the binary is in dist directory
+      - name: Update Environment Config
+        run: python build_script.py
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           ONLYFANSAPI_KEY: ${{ secrets.ONLYFANSAPI_KEY }}
           ENVIRONMENT: "production"
+
+      - name: Build Windows Executable
+        run: |
+          pyinstaller --onefile --windowed aurachat_helper_app/main.py --name aurachat_helper
+          dir dist  # Check if the binary is in dist directory
 
       - name: Upload Windows Build
         uses: actions/upload-artifact@v4
@@ -64,6 +67,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
+      - name: Update Environment Config
+        run: python build_script.py
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          ONLYFANSAPI_KEY: ${{ secrets.ONLYFANSAPI_KEY }}
+          ENVIRONMENT: "production"
+
       - name: Build macOS ARM64 App
         run: |
           ARCHFLAGS="-arch arm64" pyinstaller --windowed aurachat_helper_app/main.py --name "Aurachat Helper" --target-arch arm64
@@ -71,10 +81,6 @@ jobs:
           # Create zip to preserve permissions
           cd dist && zip -r aurachat_helper_arm64.zip "Aurachat Helper.app"
           ls -al
-        env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
-          ONLYFANSAPI_KEY: ${{ secrets.ONLYFANSAPI_KEY }}
-          ENVIRONMENT: "production"
 
       - name: Clean build files
         run: |
@@ -94,10 +100,6 @@ jobs:
           # Create zip to preserve permissions
           cd dist && zip -r aurachat_helper_intel.zip "Aurachat Helper.app"
           ls -al
-        env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
-          ONLYFANSAPI_KEY: ${{ secrets.ONLYFANSAPI_KEY }}
-          ENVIRONMENT: "production"
 
       - name: Upload macOS Builds
         uses: actions/upload-artifact@v4
@@ -129,7 +131,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: "Aurachat Helper"
-          tag_name: "v0.1.13"
+          tag_name: "v0.1.14"
           files: |
             ./dist/aurachat_helper.exe
             ./dist/aurachat_helper_arm64.zip
