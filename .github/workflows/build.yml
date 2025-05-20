@@ -129,7 +129,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: "Aurachat Helper"
-          tag_name: "v0.1.12"
+          tag_name: "v0.1.13"
           files: |
             ./dist/aurachat_helper.exe
             ./dist/aurachat_helper_arm64.zip
