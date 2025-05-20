@@ -74,18 +74,18 @@ class SelectedChatCellView:
         self.generate_label.bind('<Button-1>', lambda e: self._on_generate_click())
         
         # Issue action (red)
-        self.issue_frame = tk.Frame(action_frame, bg='#F44336')
-        self.issue_frame.pack(side=tk.LEFT, padx=5)
-        self.issue_label = tk.Label(self.issue_frame,
-                                  text="Issue",
-                                  bg='#F44336',
-                                  fg='white',
-                                  font=('Helvetica', 10),
-                                  padx=10,
-                                  pady=5)
-        self.issue_label.pack()
-        self.issue_frame.bind('<Button-1>', lambda e: self._on_issue_click())
-        self.issue_label.bind('<Button-1>', lambda e: self._on_issue_click())
+        # self.issue_frame = tk.Frame(action_frame, bg='#F44336')
+        # self.issue_frame.pack(side=tk.LEFT, padx=5)
+        # self.issue_label = tk.Label(self.issue_frame,
+        #                           text="Issue",
+        #                           bg='#F44336',
+        #                           fg='white',
+        #                           font=('Helvetica', 10),
+        #                           padx=10,
+        #                           pady=5)
+        # self.issue_label.pack()
+        # self.issue_frame.bind('<Button-1>', lambda e: self._on_issue_click())
+        # self.issue_label.bind('<Button-1>', lambda e: self._on_issue_click())
         
         # Copy text action (blue)
         self.copy_frame = tk.Frame(action_frame, bg='#2196F3')
@@ -111,10 +111,10 @@ class SelectedChatCellView:
         if hasattr(self, 'generate_command'):
             self.generate_command()
             
-    def _on_issue_click(self):
-        """Handle issue click."""
-        if hasattr(self, 'issue_command'):
-            self.issue_command()
+    # def _on_issue_click(self):
+    #     """Handle issue click."""
+    #     if hasattr(self, 'issue_command'):
+    #         self.issue_command()
             
     def _on_copy_click(self):
         """Handle copy click."""
@@ -146,9 +146,9 @@ class SelectedChatCellView:
         """Set the command for the generate action."""
         self.generate_command = command
         
-    def set_issue_command(self, command):
-        """Set the command for the issue action."""
-        self.issue_command = command
+    # def set_issue_command(self, command):
+    #     """Set the command for the issue action."""
+    #     self.issue_command = command
         
     def set_copy_command(self, command):
         """Set the command for the copy action."""

@@ -142,6 +142,7 @@ class ChatsController:
             if response:
                 # Fetch and display messages for the selected chat
                 self._fetch_messages(self.selected_chat)
+                self.fetch_and_display_chats()
             else:
                 print("Sync failed")
                 
