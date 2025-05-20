@@ -53,16 +53,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      - name: Build macOS Binary
+      - name: Build macOS arm64 (Apple Silicon)
         run: |
-          pyinstaller src/aurachat_helper_app/main.py --onefile --windowed --name aurachat_helper
-          ls -al dist
+          ARCHFLAGS='-arch arm64' pyinstaller src/aurachat_helper_app/main.py --onefile --windowed --name aurachat_helper_arm64
 
-      - name: Upload macOS Build
+      - name: Clean before next build
+        run: rm -rf build dist __pycache__
+
+      - name: Build macOS x86_64 (Intel)
+        run: |
+          ARCHFLAGS='-arch x86_64' pyinstaller src/aurachat_helper_app/main.py --onefile --windowed --name aurachat_helper_x86_64
+
+      - name: Upload macOS Builds
         uses: actions/upload-artifact@v4
         with:
           name: aurachat_helper-mac
-          path: dist/aurachat_helper
+          path: |
+            dist/aurachat_helper_arm64
+            dist/aurachat_helper_x86_64
 
   release:
     needs: [build-windows, build-mac]
@@ -92,6 +100,7 @@ jobs:
           tag_name: "v0.1.11"
           files: |
             ./dist/aurachat_helper.exe
-            ./dist/aurachat_helper
+            ./dist/aurachat_helper_arm64
+            ./dist/aurachat_helper_x86_64
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
