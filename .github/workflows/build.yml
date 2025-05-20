@@ -8,6 +8,9 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: src
 
     steps:
       - uses: actions/checkout@v3
@@ -20,23 +23,27 @@ jobs:
       - name: Install dependencies
         run: |
           pip install pyinstaller
-          pip install -r requirements.txt
+          pip install -r ../requirements.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Build Windows Executable
         run: |
-          pyinstaller src/aurachat_helper_app/main.py --onefile --windowed --name aurachat_helper
-          dir dist
+          pyinstaller --onefile --windowed aurachat_helper_app/main.py
+          dir dist  # Check if the binary is in dist directory
 
       - name: Upload Windows Build
         uses: actions/upload-artifact@v4
         with:
           name: aurachat_helper-windows
-          path: dist/aurachat_helper.exe
+          path: src/dist/main.exe
+          permissions: 0755
 
   build-mac:
     runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: src
 
     steps:
       - uses: actions/checkout@v3
@@ -49,28 +56,40 @@ jobs:
       - name: Install dependencies
         run: |
           pip install pyinstaller
-          pip install -r requirements.txt
+          pip install -r ../requirements.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      - name: Build macOS arm64 (Apple Silicon)
+      - name: Build macOS ARM64 Binary
         run: |
-          ARCHFLAGS='-arch arm64' pyinstaller src/aurachat_helper_app/main.py --onefile --windowed --name aurachat_helper_arm64
+          ARCHFLAGS="-arch arm64" pyinstaller --onefile --windowed aurachat_helper_app/main.py --name aurachat_helper_arm64
+          chmod +x dist/aurachat_helper_arm64
+          ls -al dist
 
-      - name: Clean before next build
-        run: rm -rf build dist __pycache__
-
-      - name: Build macOS x86_64 (Intel)
+      - name: Clean build files
         run: |
-          ARCHFLAGS='-arch x86_64' pyinstaller src/aurachat_helper_app/main.py --onefile --windowed --name aurachat_helper_x86_64
+          rm -rf build *.spec
+          mkdir -p dist_temp
+          mv dist/aurachat_helper_arm64 dist_temp/
+          rm -rf dist
+          mkdir dist
+          mv dist_temp/aurachat_helper_arm64 dist/
+          rm -rf dist_temp
+
+      - name: Build macOS Intel Binary
+        run: |
+          ARCHFLAGS="-arch x86_64" pyinstaller --onefile --windowed aurachat_helper_app/main.py --name aurachat_helper_intel
+          chmod +x dist/aurachat_helper_intel
+          ls -al dist
 
       - name: Upload macOS Builds
         uses: actions/upload-artifact@v4
         with:
           name: aurachat_helper-mac
           path: |
-            dist/aurachat_helper_arm64
-            dist/aurachat_helper_x86_64
+            src/dist/aurachat_helper_arm64
+            src/dist/aurachat_helper_intel
+          permissions: 0755
 
   release:
     needs: [build-windows, build-mac]
@@ -89,18 +108,19 @@ jobs:
           name: aurachat_helper-mac
           path: ./dist/
 
-      - name: Check contents of dist folder
+      - name: Set Permissions
         run: |
-          ls -l ./dist
+          chmod +x ./dist/aurachat_helper_*  # Make macOS binaries executable
+          ls -l ./dist  # Check if the binaries are downloaded correctly
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           name: "Aurachat Helper"
-          tag_name: "v0.1.11"
+          tag_name: "v0.1.8"
           files: |
-            ./dist/aurachat_helper.exe
+            ./dist/main.exe
             ./dist/aurachat_helper_arm64
-            ./dist/aurachat_helper_x86_64
+            ./dist/aurachat_helper_intel
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
