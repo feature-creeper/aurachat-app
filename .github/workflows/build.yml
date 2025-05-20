@@ -26,7 +26,7 @@ jobs:
 
       - name: Build Windows Executable
         run: |
-          pyinstaller aurachat_helper/src/aurachat_helper_app/main.py --onefile --windowed --name aurachat_helper
+          pyinstaller src/aurachat_helper_app/main.py --onefile --windowed --name aurachat_helper
           dir dist
 
       - name: Upload Windows Build
@@ -55,7 +55,7 @@ jobs:
 
       - name: Build macOS Binary
         run: |
-          pyinstaller aurachat_helper/src/aurachat_helper_app/main.py --onefile --windowed --name aurachat_helper
+          pyinstaller src/aurachat_helper_app/main.py --onefile --windowed --name aurachat_helper
           ls -al dist
 
       - name: Upload macOS Build
