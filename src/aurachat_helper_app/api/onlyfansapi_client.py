@@ -2,6 +2,10 @@ import requests
 import os
 from typing import Dict, Any, Optional, List
 from dotenv import load_dotenv
+from ..utils.logger import get_logger
+from ..env_config import ONLYFANSAPI_KEY as CONFIG_KEY
+
+logger = get_logger(__name__)
 
 class OnlyFansAPIClient:
     """Client for interacting with the OnlyFans API."""
@@ -9,13 +13,16 @@ class OnlyFansAPIClient:
     def __init__(self):
         """Initialize the client with an API token from environment variables."""
         load_dotenv()  # Load environment variables from .env file
-        token = os.getenv('ONLYFANSAPI_KEY')
+        # Try config value first, then environment variable
+        token = CONFIG_KEY or os.getenv('ONLYFANSAPI_KEY')
         if not token:
-            raise ValueError("ONLYFANS_API_TOKEN not found in environment variables. Please add it to your .env file.")
+            logger.error("ONLYFANSAPI_KEY not found in configuration or environment variables")
+            raise ValueError("ONLYFANSAPI_KEY not found in configuration or environment variables. Please add it to your .env file.")
             
         self.token = token
         self.base_url = "https://app.onlyfansapi.com/api"
         self.headers = {"Authorization": f"Bearer {token}"}
+        logger.debug("OnlyFansAPI client initialized successfully")
         
     def get_chats(self, account_id: str, order: str = 'recent') -> List[Dict[str, Any]]:
         """
