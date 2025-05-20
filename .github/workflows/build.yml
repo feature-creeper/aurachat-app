@@ -23,20 +23,20 @@ jobs:
       - name: Install dependencies
         run: |
           pip install pyinstaller
-          pip install -r ../requirements.txt  # Since requirements.txt is one level up
+          pip install -r ../requirements.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Build Windows Executable
         run: |
-          pyinstaller --onefile --windowed aurachat_helper_app/main.py  # Correct relative path from src/
-          dir dist  # Check if the binary is in dist directory
+          pyinstaller --onefile --windowed aurachat_helper_app/main.py
+          dir dist
 
       - name: Upload Windows Build
         uses: actions/upload-artifact@v4
         with:
           name: aurachat_helper-windows
-          path: src/dist/main.exe  # Path to the .exe after the build
+          path: src/dist/main.exe
 
   build-mac:
     runs-on: macos-latest
@@ -62,13 +62,13 @@ jobs:
       - name: Build macOS Binary
         run: |
           pyinstaller --onefile --windowed aurachat_helper_app/main.py
-          ls -al dist  # Works on macOS
+          ls -al dist
 
       - name: Upload macOS Build
         uses: actions/upload-artifact@v4
         with:
           name: aurachat_helper-mac
-          path: src/dist/main  # Ensure this path is correct
+          path: src/dist/main
 
   release:
     needs: [build-windows, build-mac]
@@ -86,14 +86,18 @@ jobs:
         with:
           name: aurachat_helper-mac
           path: ./dist/
+
       - name: Check contents of dist folder
         run: |
-          ls -l ./dist  # Check if the binary is downloaded correctly
+          ls -l ./dist
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           name: "Aurachat Helper"
-          tag_name: "v0.1.8"
-          files: ./dist/main.exe,./dist/main
+          tag_name: "v0.1.10"
+          files: |
+            ./dist/main.exe
+            ./dist/main
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
